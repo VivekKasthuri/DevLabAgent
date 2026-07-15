@@ -1,0 +1,46 @@
+# DevLab enterprise self-host bundle: agent + private LLM in one command.
+#   DEVLAB_API_KEY=change-me docker compose up -d
+# Then open http://localhost:4321 (Bearer auth) — code never leaves the host.
+services:
+  devlab:
+    build: .
+    ports:
+      - "4321:4321"
+    environment:
+      DEVLAB_API_KEY: ${DEVLAB_API_KEY:-}          # set to require Bearer auth
+      DEVLAB_PRIVACY: ${DEVLAB_PRIVACY:-local}      # hard-block cloud providers
+      MODEL_PROVIDER: ollama
+      OPENAI_COMPAT_BASE_URL: http://ollama:11434
+      OPENAI_COMPAT_MODEL: ${DEVLAB_MODEL:-gpt-oss:20b}
+    volumes:
+      - ${WORKSPACE:-./}:/workspace
+    depends_on:
+      - ollama
+    restart: unless-stopped
+
+  ollama:
+    image: ollama/ollama:latest
+    volumes:
+      - ollama-models:/root/.ollama
+    # Uncomment for NVIDIA GPUs:
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
+    restart: unless-stopped
+
+  # One-shot: pulls the model on first boot, then exits.
+  model-init:
+    image: ollama/ollama:latest
+    depends_on:
+      - ollama
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+    entrypoint: ["/bin/sh", "-c", "sleep 5 && ollama pull ${DEVLAB_MODEL:-gpt-oss:20b}"]
+    restart: "no"
+
+volumes:
+  ollama-models:

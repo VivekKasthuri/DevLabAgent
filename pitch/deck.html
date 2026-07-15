@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DevLab — Investor Pitch</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --bg: #0b0e14; --card: #131822; --accent: #4f8ef7; --accent2: #34d399;
+    --warn: #fbbf24; --text: #e6edf3; --dim: #8b98a9; --border: #232b3a;
+  }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, 'Segoe UI', Roboto, sans-serif; overflow: hidden; }
+  .slide {
+    display: none; width: 100vw; height: 100vh; padding: 5vh 7vw;
+    flex-direction: column; justify-content: center;
+  }
+  .slide.active { display: flex; }
+  h1 { font-size: 3.2rem; margin-bottom: 1rem; line-height: 1.15; }
+  h2 { font-size: 2.2rem; margin-bottom: 1.5rem; color: var(--accent); }
+  h3 { font-size: 1.2rem; margin: .8rem 0 .4rem; color: var(--accent2); }
+  p, li { font-size: 1.15rem; line-height: 1.55; color: var(--text); }
+  .dim { color: var(--dim); }
+  .big { font-size: 1.5rem; }
+  .huge { font-size: 2.6rem; font-weight: 700; }
+  .accent { color: var(--accent); } .green { color: var(--accent2); } .warn { color: var(--warn); }
+  ul { margin: .5rem 0 .5rem 1.4rem; }
+  li { margin: .45rem 0; }
+  table { border-collapse: collapse; width: 100%; margin: 1rem 0; font-size: 1rem; }
+  th, td { border: 1px solid var(--border); padding: .55rem .8rem; text-align: left; }
+  th { background: var(--card); color: var(--accent); }
+  td.y { color: var(--accent2); font-weight: 600; } td.n { color: #f87171; } td.m { color: var(--warn); }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 1rem; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.2rem; margin-top: 1rem; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.3rem; }
+  .stat { text-align: center; }
+  .stat .num { font-size: 2.4rem; font-weight: 800; color: var(--accent); }
+  .stat .lbl { color: var(--dim); font-size: .95rem; margin-top: .3rem; }
+  .footer { position: fixed; bottom: 16px; right: 24px; color: var(--dim); font-size: .85rem; }
+  .progress { position: fixed; bottom: 0; left: 0; height: 3px; background: var(--accent); transition: width .25s; }
+  .tagline { font-size: 1.4rem; color: var(--dim); margin-top: .5rem; }
+  .quote { border-left: 4px solid var(--accent); padding: .8rem 1.2rem; background: var(--card); border-radius: 0 10px 10px 0; margin: 1rem 0; font-size: 1.25rem; font-style: italic; }
+  .kbd { background: var(--card); border: 1px solid var(--border); border-radius: 5px; padding: 1px 7px; font-family: monospace; font-size: .95rem; }
+  code { font-family: 'SF Mono', Menlo, monospace; background: var(--card); padding: 2px 6px; border-radius: 4px; font-size: .95em; }
+</style>
+</head>
+<body>
+
+<!-- 1. TITLE -->
+<section class="slide active">
+  <h1>Dev<span class="accent">Lab</span></h1>
+  <p class="tagline">The autonomous coding agent that runs anywhere, routes to any model,<br>and catches the bugs other agents miss — at a quarter of the price.</p>
+  <div class="grid3" style="margin-top:3rem; max-width:720px;">
+    <div class="card stat"><div class="num">81</div><div class="lbl">built-in tools</div></div>
+    <div class="card stat"><div class="num">86%</div><div class="lbl">token cost reduction</div></div>
+    <div class="card stat"><div class="num">$7</div><div class="lbl">/mo starter — 65% under Cursor</div></div>
+  </div>
+  <p class="dim" style="margin-top:3rem;">Seed round · 2026</p>
+</section>
+
+<!-- 2. PROBLEM -->
+<section class="slide">
+  <h2>The Problem</h2>
+  <ul class="big">
+    <li><b>Coding agents are expensive and opaque.</b> Cursor Ultra is $200/mo; Claude Max is $100–200/mo. Usage limits are hidden and change without notice.</li>
+    <li><b>Vendor lock-in.</b> Claude Code only uses Anthropic models. Copilot locks you into GitHub's stack. When a provider degrades or raises prices, you're stuck.</li>
+    <li><b>Every agent misses the same class of bugs.</b> Race conditions, duplicate endpoint registrations, TOCTOU flaws — no mainstream agent statically guards for them <i>while it edits</i>.</li>
+    <li><b>Cloud-only.</b> No offline mode, no air-gapped option, no local fallback when the API is down.</li>
+  </ul>
+  <div class="quote">Teams pay $20–200 per seat per month and still ship concurrency bugs the agent itself introduced.</div>
+</section>
+
+<!-- 3. SOLUTION -->
+<section class="slide">
+  <h2>The Solution — DevLab</h2>
+  <div class="grid">
+    <div class="card">
+      <h3>One agent, every surface</h3>
+      <p>CLI, web UI, native macOS/Windows apps, VS Code inline tab-complete, an OpenAI-compatible API (works in any IDE), and a GitHub PR review bot with CI merge gates. Same brain everywhere.</p>
+    </div>
+    <div class="card">
+      <h3>Model-agnostic smart routing</h3>
+      <p>Classifies each task and routes to the cheapest capable model — Claude for hard problems, CodeLlama/Mistral via private Ollama server at $0 marginal cost, or a shared team GPU server for free/offline. Automatic failover, no lock-in, no vendor dependency.</p>
+    </div>
+    <div class="card">
+      <h3>Safety guards no one else has</h3>
+      <p>After every edit, DevLab statically checks for endpoint conflicts and 5 classes of race conditions — and stops to ask the developer before shipping the bug.</p>
+    </div>
+    <div class="card">
+      <h3>Privacy &amp; quality dials</h3>
+      <p>Hard local-only mode — code never touches the cloud, per repo. Self-refine and best-of-N loops close the quality gap when running local models. Token pruning cuts per-call overhead 71–86%.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 4. DEMO -->
+<section class="slide">
+  <h2>Live Demo (3 minutes)</h2>
+  <ul class="big">
+    <li><b>1 · Fix a real bug.</b> <span class="kbd">devlab "fix the failing checkout test"</span> — agent explores, patches, runs tests, verifies green.</li>
+    <li><b>2 · Guard fires mid-edit.</b> Agent adds an async handler that mutates shared state → DevLab flags <code>R002: shared mutable state in async context</code> and asks the developer how to resolve it. <span class="green">No other agent does this.</span></li>
+    <li><b>3 · PR bot posts a scorecard.</b> Rubric-scored review (correctness, safety, tests, style) with a CI merge gate — objective quality bars, not vibes.</li>
+    <li><b>4 · <span class="kbd">/billing</span></b> — live usage ledger, quota, and overage math. The monetization already works.</li>
+  </ul>
+  <p class="dim">Product + moat + revenue proven in a single flow.</p>
+</section>
+
+<!-- 5. WHY NOW -->
+<section class="slide">
+  <h2>Why Now</h2>
+  <ul class="big">
+    <li><b>Model prices are collapsing</b> — frontier-class inference cost fell ~10x in 24 months. Value migrates from the model to the <span class="accent">orchestration layer</span>. That's us.</li>
+    <li><b>Agent adoption is inflecting.</b> Majority of professional developers now use AI tools weekly; agentic (multi-step) usage is the fastest-growing segment.</li>
+    <li><b>Enterprises are hitting the privacy wall.</b> Regulated industries want local/hybrid inference. Cloud-only competitors structurally can't serve them; DevLab's Ollama path can.</li>
+    <li><b>Pricing backlash is real.</b> Cursor's 2025 pricing changes and opaque Claude limits created churn-ready customers actively looking for transparent alternatives.</li>
+  </ul>
+</section>
+
+<!-- 6. MOAT -->
+<section class="slide">
+  <h2>Moat &amp; Differentiation</h2>
+  <table>
+    <tr><th>Capability</th><th>DevLab</th><th>Claude Code</th><th>Cursor</th><th>Copilot</th></tr>
+    <tr><td>Race-condition &amp; endpoint-conflict guards (mid-edit)</td><td class="y">✅ unique</td><td class="n">✗</td><td class="n">✗</td><td class="n">✗</td></tr>
+    <tr><td>Rubric-scored PR reviews + CI merge gate</td><td class="y">✅ unique</td><td class="n">✗</td><td class="m">Bugbot ($)</td><td class="m">basic</td></tr>
+    <tr><td>Cross-provider smart routing w/ failover</td><td class="y">✅</td><td class="n">✗</td><td class="y">✅</td><td class="y">✅</td></tr>
+    <tr><td>Fully offline / air-gapped mode</td><td class="y">✅</td><td class="n">✗</td><td class="n">✗</td><td class="n">✗</td></tr>
+    <tr><td>Hard privacy mode (code never leaves network)</td><td class="y">✅ unique</td><td class="n">✗</td><td class="n">✗</td><td class="n">✗</td></tr>
+    <tr><td>One-command team LLM server (flat inference cost)</td><td class="y">✅ unique</td><td class="n">✗</td><td class="n">✗</td><td class="n">✗</td></tr>
+    <tr><td>Self-refine + best-of-N quality loops</td><td class="y">✅</td><td class="n">✗</td><td class="n">✗</td><td class="n">✗</td></tr>
+    <tr><td>Token-cost optimization (71–86% cut)</td><td class="y">✅</td><td class="m">partial</td><td class="m">hidden</td><td class="m">hidden</td></tr>
+    <tr><td>Transparent metered billing + BYO keys</td><td class="y">✅</td><td class="n">✗</td><td class="m">partial</td><td class="n">✗</td></tr>
+    <tr><td>CLI + Web + Native + IDE + PR bot</td><td class="y">✅ all</td><td class="m">CLI/IDE</td><td class="m">IDE</td><td class="m">IDE/CLI</td></tr>
+  </table>
+  <p class="dim">Compounding moat: routing telemetry → better cost/quality decisions → cheaper per task → more usage → more telemetry.</p>
+</section>
+
+<!-- 7. BUSINESS MODEL -->
+<section class="slide">
+  <h2>Business Model</h2>
+  <table>
+    <tr><th>Plan</th><th>Price</th><th>Positioning</th><th>Competitor equivalent</th></tr>
+    <tr><td>Free</td><td>$0</td><td>Local Ollama + limited premium requests</td><td>None offer real free agentic use</td></tr>
+    <tr><td>Starter</td><td><b>$7/mo</b></td><td>Entry agentic tier — cheapest on the market</td><td>No competitor under $10</td></tr>
+    <tr><td>Pro</td><td><b>$12/mo</b></td><td>Full agent, smart routing, tab-complete</td><td>Cursor $20 · Claude $20</td></tr>
+    <tr><td>Team</td><td><b>$20/user</b></td><td>+ PR bot, usage dashboard, shared config</td><td>Cursor $40 · Claude $25 (throttled → $100+ effective)</td></tr>
+    <tr><td>Unlimited</td><td><b>$49/mo</b></td><td>No quotas, priority routing</td><td>Cursor $200 · Claude Max $100–200</td></tr>
+    <tr><td>Enterprise Flat</td><td><b>$599/mo</b></td><td>Unlimited seats, private model server, SLA</td><td>Cursor $40/seat → 20 devs = $800/mo</td></tr>
+    <tr><td>Client-Hosted</td><td><b>$999/mo</b></td><td>Their server, nothing leaves their network</td><td>No competitor offers this</td></tr>
+  </table>
+  <div class="grid" style="margin-top:.5rem;">
+    <div class="card"><h3>Transparent overage</h3><p>$0.02 / premium request · $0.30 / 1M tokens. No surprise throttling — the #1 complaint about competitors.</p></div>
+    <div class="card"><h3>Margin engine</h3><p>Routing + token pruning means our COGS per task is a fraction of competitors'. BYO-key users pay us pure software margin.</p></div>
+  </div>
+</section>
+
+<!-- 7b. TWO BUSINESS MODELS -->
+<section class="slide">
+  <h2>Two Business Models — One Product</h2>
+  <table>
+    <tr><th></th><th>Self-hosted (flat)</th><th>Cloud API (per-use)</th></tr>
+    <tr><td>Inference cost at scale</td><td class="y"><b>Flat</b> — one shared GPU box, dev #21 costs $0</td><td class="m">Pay per token / seat</td></tr>
+    <tr><td>Privacy</td><td class="y">Code never leaves the network</td><td class="m">Provider-dependent</td></tr>
+    <tr><td>Setup</td><td>One command: <code>setup-llm-server.sh</code></td><td class="y">$0 infra, start day 1</td></tr>
+    <tr><td>Best for</td><td>Banks, 20+ dev teams, steady workloads</td><td>Startups, spiky usage, hardest tasks</td></tr>
+  </table>
+  <div class="grid" style="margin-top:.5rem;">
+    <div class="card"><h3>Hybrid routing</h3><p>Cheap local model for routine work, frontier API for the hardest 10%. Privacy mode hard-blocks cloud per repo. Switch anytime — just env vars, zero workflow change.</p></div>
+    <div class="card"><h3>Why rivals can't follow</h3><p>Claude / Cursor / Copilot <i>are</i> per-seat cloud inference businesses. Going flat/self-hosted would cannibalize their revenue. DevLab is structurally the only agent offering both.</p></div>
+  </div>
+  <p class="dim">"Cloud agents rent you intelligence per seat, forever. DevLab lets you buy it once and share it — or mix both."</p>
+</section>
+
+<!-- 7c. DEPLOYMENT MODELS -->
+<section class="slide">
+  <h2>Deployment Models — Client Choice</h2>
+  <div class="grid" style="margin-bottom:1.2rem;">
+    <div class="card">
+      <h3>🏢 Option A — Vendor-Hosted (Self-Hosted)</h3>
+      <p style="margin-bottom:.8rem;">You (DevLab) deploy a <b>dedicated private server per client</b>.<br>Client installs only the app or CLI binary.</p>
+      <table style="font-size:.95rem;">
+        <tr><td>Client installs</td><td class="y">App (.dmg / .exe) or CLI binary only</td></tr>
+        <tr><td>Model runs on</td><td class="y">Your private server, dedicated to that client</td></tr>
+        <tr><td>Source code</td><td class="y">Never leaves client machine</td></tr>
+        <tr><td>Setup for client</td><td class="y">Enter URL + API key — 2 minutes</td></tr>
+        <tr><td>Your infra cost</td><td>~$5/mo MVP · ~$160/mo production per client</td></tr>
+        <tr><td>Bill client</td><td class="y">$199–$599/mo — healthy margin</td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <h3>🔒 Option B — Client-Hosted</h3>
+      <p style="margin-bottom:.8rem;">Client IT deploys on their <b>own internal network</b>.<br>Nothing ever leaves their environment — not even the prompt.</p>
+      <table style="font-size:.95rem;">
+        <tr><td>Client installs</td><td class="y">App + runs one setup script on their server</td></tr>
+        <tr><td>Model runs on</td><td class="y">Client's own hardware / VPC</td></tr>
+        <tr><td>Source code</td><td class="y">Stays entirely inside client network</td></tr>
+        <tr><td>Setup for client</td><td><code>bash setup.sh --domain ... --key ...</code></td></tr>
+        <tr><td>Your infra cost</td><td class="y">$0 — client owns the hardware</td></tr>
+        <tr><td>Bill client</td><td class="y">$999/mo enterprise license</td></tr>
+      </table>
+    </div>
+  </div>
+  <div class="card" style="background:transparent; border-color: var(--accent2);">
+    <p>📱 <b>Client always downloads only the app or CLI.</b> No Node.js. No Ollama. No source code.
+    &nbsp;·&nbsp; Model: <span class="green">CodeLlama 13B · Mistral 7B · Llama3.2 3B</span> (US-origin, Apache 2.0, no licensing risk)
+    &nbsp;·&nbsp; MVP infra cost: <span class="accent"><b>$5/mo</b></span> (Oracle Cloud free + Hetzner $4)</p>
+  </div>
+</section>
+
+<!-- 8. MARKET -->
+<section class="slide">
+  <h2>Market</h2>
+  <div class="grid3">
+    <div class="card stat"><div class="num">~30M</div><div class="lbl">professional developers worldwide (TAM)</div></div>
+    <div class="card stat"><div class="num">$30B+</div><div class="lbl">projected AI dev-tools market by 2030</div></div>
+    <div class="card stat"><div class="num">$500M+</div><div class="lbl">Cursor ARR — proof devs pay for agents</div></div>
+  </div>
+  <h3 style="margin-top:2rem;">Bottom-up</h3>
+  <ul>
+    <li>0.1% of devs on Pro ($12) → <b>$4.3M ARR</b></li>
+    <li>0.5% blended Pro/Team → <b>$32M+ ARR</b></li>
+    <li>Beachhead: cost-sensitive teams, privacy-constrained enterprises, and Cursor pricing refugees.</li>
+  </ul>
+</section>
+
+<!-- 9. TRACTION -->
+<section class="slide">
+  <h2>Traction — Built, Not Promised</h2>
+  <div class="grid3">
+    <div class="card stat"><div class="num">81</div><div class="lbl">tools in the agent runtime</div></div>
+    <div class="card stat"><div class="num">189</div><div class="lbl">automated tests, all green</div></div>
+    <div class="card stat"><div class="num">6</div><div class="lbl">surfaces shipped: CLI, web, native, IDE, API, PR bot</div></div>
+  </div>
+  <ul style="margin-top:1.5rem;">
+    <li>✅ Smart 3-model router (CodeLlama · Mistral · Llama3.2) — auto-picks per task, client sees "DevLab Coder"</li>
+    <li>✅ DI &amp; architecture checker: MVVM, VIPER, TCA, Clean, BLoC, MVC across 9 languages (Swift, Kotlin, Flutter, RN, TS, JS, Python, Go, Rust, Java)</li>
+    <li>✅ Endpoint-conflict + race-condition guards (validated on our own codebase)</li>
+    <li>✅ Private server: Oracle Cloud free tier + Hetzner = <b>$5/mo MVP infra</b></li>
+    <li>✅ Hard privacy mode — source code never leaves client machine (<code>DEVLAB_NO_LOG=1</code>)</li>
+    <li>✅ Self-refine &amp; best-of-N quality loops for local models</li>
+    <li>✅ Metered billing, quotas, plans, license keys — revenue-ready</li>
+    <li>✅ VS Code inline-completion extension + GitHub PR review bot with CI gates</li>
+    <li>✅ 71–86% measured token savings per LLM call</li>
+  </ul>
+</section>
+
+<!-- 10. GTM -->
+<section class="slide">
+  <h2>Go-To-Market</h2>
+  <div class="grid">
+    <div class="card"><h3>Phase 1 — Bottom-up (0–6 mo)</h3><p>Open-core launch on HN / GitHub. Free local tier drives installs; conflict-guard demos drive virality ("my agent caught a race condition"). Convert to Pro at quota.</p></div>
+    <div class="card"><h3>Phase 2 — Teams (6–18 mo)</h3><p>PR bot is the team wedge: one champion installs the CI gate, whole repo sees scorecards, team plan follows. Usage dashboard closes the sale.</p></div>
+    <div class="card"><h3>Phase 3 — Enterprise (18+ mo)</h3><p>Client-hosted or vendor-hosted private model server per client. Source code never leaves their network. SSO, audit logs, private model routing. Cloud-only rivals structurally can't follow.</p></div>
+    <div class="card"><h3>Channels</h3><p>VS Code marketplace, GitHub Apps directory, dev-influencer demos, "Cursor cost calculator" comparison content.</p></div>
+  </div>
+</section>
+
+<!-- 11. COMPETITION SUMMARY -->
+<section class="slide">
+  <h2>Competitive Position</h2>
+  <div class="quote">"Cursor sells you a model markup. DevLab sells intelligence about <b>which model to use</b> and <b>what bugs it missed</b> — at a quarter of the price."</div>
+  <ul class="big">
+    <li><b>vs Claude Code:</b> we use Claude <i>when it's worth it</i> — plus every other model, offline mode, and guards it doesn't have.</li>
+    <li><b>vs Cursor:</b> parity on agent + tab-complete, 25–70% cheaper, transparent billing, not IDE-locked.</li>
+    <li><b>vs Copilot:</b> deeper agentic autonomy, unique safety guards, multi-surface, model freedom.</li>
+  </ul>
+</section>
+
+<!-- 12. ASK -->
+<section class="slide">
+  <h2>The Ask</h2>
+  <p class="huge">$1.5M Seed</p>
+  <div class="grid3" style="margin-top:1.5rem;">
+    <div class="card"><h3>40% — Engineering</h3><p>2 engineers: Stripe billing integration, usage dashboard, enterprise SSO/audit, latency polish on tab-complete.</p></div>
+    <div class="card"><h3>35% — GTM</h3><p>Open-core launch, VS Code / GitHub marketplace presence, developer-advocacy content engine.</p></div>
+    <div class="card"><h3>25% — Infra &amp; runway</h3><p>Inference credits for free tier, routing-telemetry pipeline, 18-month runway.</p></div>
+  </div>
+  <h3 style="margin-top:2rem;">Milestones this buys</h3>
+  <ul>
+    <li>Public launch → 10K installs in 6 months</li>
+    <li>1,000 paying seats (~$250K ARR) by month 12</li>
+    <li>3 team/enterprise pilots with the PR-bot CI gate</li>
+  </ul>
+</section>
+
+<!-- 13. CLOSE -->
+<section class="slide">
+  <h1>Dev<span class="accent">Lab</span></h1>
+  <p class="tagline big">Any model. Any surface. Bugs caught before they ship.<br>The orchestration layer wins — and it's already built.</p>
+  <p class="dim" style="margin-top:3rem;">Thank you · questions welcome</p>
+</section>
+
+<div class="footer"><span id="pageno">1 / 13</span> · ← → to navigate</div>
+<div class="progress" id="bar"></div>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  let i = 0;
+  function show(n) {
+    slides[i].classList.remove('active');
+    i = Math.max(0, Math.min(slides.length - 1, n));
+    slides[i].classList.add('active');
+    document.getElementById('pageno').textContent = (i + 1) + ' / ' + slides.length;
+    document.getElementById('bar').style.width = ((i + 1) / slides.length * 100) + '%';
+  }
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') show(i + 1);
+    if (e.key === 'ArrowLeft' || e.key === 'PageUp') show(i - 1);
+    if (e.key === 'Home') show(0);
+    if (e.key === 'End') show(slides.length - 1);
+  });
+  document.addEventListener('click', e => show(e.clientX > innerWidth / 2 ? i + 1 : i - 1));
+  show(0);
+</script>
+</body>
+</html>

@@ -1,0 +1,40 @@
+name: auto-test
+description: Automatically generate tests for all source files in a project
+version: "1.0"
+
+steps:
+  - name: Analyze project
+    type: tool
+    name: analyze_project
+    args:
+      path: "{{project_path}}"
+    save_as: project_info
+
+  - name: List source files
+    type: tool
+    name: list_files
+    args:
+      path: "{{project_path}}"
+      pattern: "src/**/*.{js,ts,py}"
+    save_as: source_files
+
+  - name: Generate test plan
+    type: agent
+    prompt: |
+      Given this project structure:
+      {{project_info}}
+      
+      And these source files:
+      {{source_files}}
+      
+      Create a comprehensive test plan. Then generate test stubs for the top 3 most important files.
+      Use the generate_tests tool for each file. Save the test files alongside the source files.
+
+  - name: Run existing tests
+    type: shell
+    command: "npm test 2>&1 | tail -30 || pytest 2>&1 | tail -30 || echo 'No test runner found'"
+    cwd: "{{project_path}}"
+
+  - name: Report
+    type: agent
+    prompt: "Summarise what tests were generated and the current test status. Save this summary to memory."

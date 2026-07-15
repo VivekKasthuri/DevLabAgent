@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DevLab Dashboard</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root { --bg:#0b0e14; --card:#131822; --accent:#4f8ef7; --green:#34d399; --warn:#fbbf24; --red:#f87171; --text:#e6edf3; --dim:#8b98a9; --border:#232b3a; }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system,'Segoe UI',Roboto,sans-serif; padding: 24px; }
+  header { display:flex; align-items:baseline; gap:14px; margin-bottom:20px; }
+  h1 { font-size:1.5rem; } h1 span { color: var(--accent); }
+  .dim { color: var(--dim); font-size:.85rem; }
+  a.back { color: var(--accent); text-decoration:none; margin-left:auto; font-size:.9rem; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:16px; }
+  .card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:18px; }
+  .card h2 { font-size:1rem; color:var(--accent); margin-bottom:12px; }
+  .stat-row { display:flex; justify-content:space-between; margin:6px 0; font-size:.92rem; }
+  .stat-row .v { font-weight:600; }
+  .gauge { height:8px; background:#1c2433; border-radius:4px; overflow:hidden; margin:4px 0 10px; }
+  .gauge > div { height:100%; background:var(--green); border-radius:4px; transition:width .4s; }
+  .gauge.warn > div { background:var(--warn); } .gauge.over > div { background:var(--red); }
+  .badge { display:inline-block; padding:1px 8px; border-radius:10px; font-size:.75rem; font-weight:600; }
+  .badge.pass { background:#0d2a1e; color:var(--green); } .badge.fail { background:#2a0d0d; color:var(--red); }
+  table { width:100%; border-collapse:collapse; font-size:.85rem; }
+  th,td { text-align:left; padding:5px 8px; border-bottom:1px solid var(--border); }
+  th { color:var(--dim); font-weight:500; }
+  .trend-up { color:var(--green); } .trend-down { color:var(--red); }
+  #chart { width:100%; height:120px; }
+  .kb-entry { font-size:.82rem; color:var(--dim); margin:5px 0; padding-left:10px; border-left:2px solid var(--border); }
+  .kb-entry b { color:var(--text); }
+  .empty { color:var(--dim); font-size:.85rem; font-style:italic; }
+  .big-num { font-size:1.9rem; font-weight:800; color:var(--accent); }
+</style>
+</head>
+<body>
+<header>
+  <h1>Dev<span>Lab</span> Dashboard</h1>
+  <span class="dim" id="meta">loading…</span>
+  <span id="privacy-badge"></span>
+  <a class="back" href="/">← back to editor</a>
+</header>
+
+<div class="grid" id="grid"><div class="card"><p class="empty">Loading dashboard…</p></div></div>
+
+<script>
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+function gauge(str) {
+  // parses "320 / 500 (64%)" style strings from usageReport; falls back to text
+  const m = /([\d,]+)\s*\/\s*([\d,]+)/.exec(str || '');
+  if (!m) return `<div class="stat-row"><span class="v">${esc(str)}</span></div>`;
+  const used = +m[1].replace(/,/g,''), max = +m[2].replace(/,/g,'');
+  const pct = max ? Math.min(100, Math.round(used / max * 100)) : 0;
+  const cls = pct >= 100 ? 'over' : pct >= 80 ? 'warn' : '';
+  return `<div class="gauge ${cls}"><div style="width:${pct}%"></div></div><div class="dim" style="font-size:.78rem">${esc(str)}</div>`;
+}
+
+function sparkline(history) {
+  const scores = history.map(h => h.weightedScore).filter(n => typeof n === 'number');
+  if (scores.length < 2) return '<p class="empty">Score more PRs to see the trend</p>';
+  const W = 560, H = 110, pad = 8;
+  const min = Math.min(...scores, 1), max = Math.max(...scores, 4);
+  const x = i => pad + i * (W - 2*pad) / (scores.length - 1);
+  const y = v => H - pad - (v - min) / (max - min || 1) * (H - 2*pad);
+  const pts = scores.map((v,i) => `${x(i)},${y(v)}`).join(' ');
+  const pass = history[history.length-1]?.passingScore ?? 3;
+  return `<svg id="chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+    <line x1="${pad}" y1="${y(pass)}" x2="${W-pad}" y2="${y(pass)}" stroke="#fbbf24" stroke-dasharray="4 4" stroke-width="1" opacity=".5"/>
+    <polyline points="${pts}" fill="none" stroke="#4f8ef7" stroke-width="2"/>
+    ${scores.map((v,i)=>`<circle cx="${x(i)}" cy="${y(v)}" r="3" fill="${v>=pass?'#34d399':'#f87171'}"/>`).join('')}
+  </svg>
+  <div class="dim" style="font-size:.75rem">yellow dashed = passing score (${pass}) · green dot = pass · red = fail</div>`;
+}
+
+async function load() {
+  const r = await fetch('/api/dashboard');
+  const d = await r.json();
+  if (d.error) { $('#grid').innerHTML = `<div class="card"><p class="empty">Error: ${esc(d.error)}</p></div>`; return; }
+  $('#meta').textContent = d.project + ' · ' + new Date(d.generatedAt).toLocaleString();
+  const pm = d.privacy?.mode;
+  $('#privacy-badge').innerHTML = pm === 'local-only'
+    ? '<span style="background:#0d3321;color:#4ade80;border:1px solid #14532d;border-radius:12px;padding:2px 10px;font-size:12px">🔒 local-only — code never leaves this machine</span>'
+    : '<span style="background:#2a2417;color:#fbbf24;border:1px solid #78530a;border-radius:12px;padding:2px 10px;font-size:12px">☁️ open — cloud models allowed</span>';
+
+  const cards = [];
+
+  // Usage & billing
+  const u = d.billing?.usage;
+  if (u) {
+    cards.push(`<div class="card"><h2>💳 Usage &amp; Billing</h2>
+      <div class="stat-row"><span>Plan</span><span class="v">${esc(u.plan)}</span></div>
+      <div class="stat-row"><span>Period</span><span class="v">${esc(u.period)}</span></div>
+      <div style="margin-top:8px"><span class="dim">Premium requests</span>${gauge(u.usage?.premiumRequests)}</div>
+      <div><span class="dim">Tokens</span>${gauge(u.usage?.tokens)}</div>
+      <div class="stat-row"><span>Est. provider cost</span><span class="v">${esc(u.estimatedProviderCost)}</span></div>
+      ${u.overageCharge ? `<div class="stat-row"><span>Overage</span><span class="v" style="color:var(--warn)">${esc(u.overageCharge)}</span></div>` : ''}
+      ${u.upgradeHint ? `<p class="dim" style="margin-top:8px">${esc(u.upgradeHint)}</p>` : ''}
+    </div>`);
+  }
+
+  // Quality trend
+  const q = d.quality || {};
+  cards.push(`<div class="card" style="grid-column:span 2; min-width:0"><h2>📈 Code Quality Trend</h2>
+    ${sparkline(q.history || [])}
+    ${q.trend != null ? `<p style="margin-top:6px" class="${q.trend >= 0 ? 'trend-up' : 'trend-down'}">${q.trend >= 0 ? '▲' : '▼'} ${Math.abs(q.trend)} avg score change (first half → second half)</p>` : ''}
+  </div>`);
+
+  // Scorecards
+  const sc = q.scorecards || [];
+  cards.push(`<div class="card"><h2>🧪 Recent Scorecards</h2>
+    ${sc.length ? `<table><tr><th>Target</th><th>Score</th><th>Verdict</th><th>Failing</th></tr>
+      ${sc.slice(0,8).map(c => `<tr>
+        <td>${c.prNumber ? 'PR #' + esc(c.prNumber) : esc(c.type)}</td>
+        <td>${esc(c.weightedScore)}/${esc(c.passingScore)}</td>
+        <td><span class="badge ${c.verdict}">${esc(c.verdict)}</span></td>
+        <td class="dim">${esc((c.failingCriteria || []).join(', ') || '—')}</td>
+      </tr>`).join('')}</table>` : '<p class="empty">No scorecards yet — run score_rubric or review a PR</p>'}
+  </div>`);
+
+  // Knowledge base
+  const kb = d.knowledge || {};
+  cards.push(`<div class="card"><h2>🧠 Knowledge Base</h2>
+    <div class="big-num">${kb.total || 0}</div><div class="dim" style="margin-bottom:10px">entries learned</div>
+    ${Object.entries(kb.byCategory || {}).map(([k,v]) => `<div class="stat-row"><span>${esc(k)}s</span><span class="v">${v}</span></div>`).join('')}
+    ${(kb.recent || []).slice(0,4).map(e => `<div class="kb-entry"><b>${esc(e.category)}</b> — ${esc(e.text)}</div>`).join('')}
+    ${!kb.total ? '<p class="empty">Empty — learnings accumulate from PR reviews</p>' : ''}
+  </div>`);
+
+  // Routing
+  const rt = d.routing;
+  if (rt && rt.calls > 0) {
+    const local = (rt.byProvider?.ollama || 0), total = rt.calls || 1;
+    cards.push(`<div class="card"><h2>🔀 Model Routing</h2>
+      <div class="stat-row"><span>Total routed calls</span><span class="v">${rt.calls}</span></div>
+      <div class="stat-row"><span>Failovers</span><span class="v">${rt.failovers || 0}</span></div>
+      ${Object.entries(rt.byProvider || {}).map(([p,n]) => `<div class="stat-row"><span>${esc(p)}</span><span class="v">${n} (${Math.round(n/total*100)}%)</span></div>`).join('')}
+      <p class="dim" style="margin-top:8px">${Math.round(local/total*100)}% served free/local</p>
+    </div>`);
+  }
+
+  // Activity
+  const act = d.activity;
+  if (act?.sessions?.length) {
+    cards.push(`<div class="card"><h2>⚡ Recent Sessions</h2>
+      <table><tr><th>When</th><th>Project</th><th>Tokens</th></tr>
+      ${act.sessions.slice(0,6).map(s => `<tr>
+        <td class="dim">${esc((s.started_at || s.startedAt || '').slice(0,16))}</td>
+        <td>${esc((s.project || '').split('/').pop() || '—')}</td>
+        <td>${((s.tokens_in||0)+(s.tokens_out||0)).toLocaleString()}</td>
+      </tr>`).join('')}</table>
+    </div>`);
+  }
+
+  $('#grid').innerHTML = cards.join('');
+}
+load();
+setInterval(load, 30000);
+</script>
+</body>
+</html>

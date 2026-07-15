@@ -1,0 +1,76 @@
+{
+  "title": "Project Requirements",
+  "type": "project",
+  "generatedAt": "2026-07-08T17:15:38.120Z",
+  "requirements": [
+    {
+      "id": "REQ-001",
+      "category": "functional",
+      "title": "Core features implemented per specification",
+      "description": "All specified features work end-to-end",
+      "priority": "must",
+      "acceptanceCriteria": [
+        "Feature list verified manually or via E2E tests"
+      ],
+      "status": "proposed"
+    },
+    {
+      "id": "REQ-002",
+      "category": "non-functional",
+      "title": "Automated test suite",
+      "description": "Unit + integration tests with CI execution",
+      "priority": "must",
+      "acceptanceCriteria": [
+        "Tests run on every commit",
+        "Critical paths covered"
+      ],
+      "status": "proposed"
+    },
+    {
+      "id": "REQ-003",
+      "category": "non-functional",
+      "title": "Security baseline",
+      "description": "No hardcoded secrets, validated inputs, patched dependencies",
+      "priority": "must",
+      "acceptanceCriteria": [
+        "Security scan clean",
+        "No high/critical CVEs"
+      ],
+      "status": "proposed"
+    },
+    {
+      "id": "REQ-004",
+      "category": "non-functional",
+      "title": "Documentation",
+      "description": "README with setup, usage, and architecture overview",
+      "priority": "must",
+      "acceptanceCriteria": [
+        "New contributor can set up from README alone"
+      ],
+      "status": "proposed"
+    },
+    {
+      "id": "REQ-005",
+      "category": "non-functional",
+      "title": "CI/CD pipeline",
+      "description": "Automated build, test, and release",
+      "priority": "should",
+      "acceptanceCriteria": [
+        "Pipeline runs on push/PR"
+      ],
+      "status": "proposed"
+    },
+    {
+      "id": "REQ-006",
+      "category": "non-functional",
+      "title": "Error handling & logging",
+      "description": "Graceful failures with actionable logs",
+      "priority": "should",
+      "acceptanceCriteria": [
+        "No unhandled crashes",
+        "Errors logged with context"
+      ],
+      "status": "proposed"
+    }
+  ]
+}

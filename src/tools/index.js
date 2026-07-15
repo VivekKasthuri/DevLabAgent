@@ -1,0 +1,1217 @@
+// src/tools/index.js — tool registry: definitions + execution dispatcher
+import * as files from './files.js';
+import * as shell from './shell.js';
+import * as git   from './git.js';
+import * as web   from './web.js';
+import * as code  from './code.js';
+import * as voice from './voice.js';
+import * as mobile from './mobile.js';
+import * as automation from './automation.js';
+import * as diAnalyzer from './di-analyzer.js';
+import * as ci from './ci.js';
+import * as builder from './builder.js';
+import * as diagram from './diagram.js';
+import * as advisor from './advisor.js';
+import * as rules from '../rules.js';
+import * as rubric from './rubric.js';
+import * as docker from './docker.js';
+import * as pr from './pr.js';
+import * as knowledge from './knowledge.js';
+import { runSubagent, runSubagents, listRoles } from '../subagent.js';
+import * as semindex from './semindex.js';
+import * as github from './github.js';
+import * as conflicts from './conflicts.js';
+import * as atlassian from './atlassian.js';
+import * as memory from '../memory.js';
+import { getMcpToolDefinitions, executeMcpTool, isMcpTool, reloadMcpServers, getMcpStatus, addMcpServer, removeMcpServer, suggestMcpServers, getMcpCatalog } from '../mcp.js';
+
+// ── Tool definitions (passed to Groq function-calling API) ────────────────────
+export const BASE_TOOL_DEFINITIONS = [
+  {
+    type: 'function',
+    function: {
+      name: 'read_file',
+      description: 'Read a file\'s contents. Use before editing.',
+      parameters: { type: 'object', properties: { path: { type: 'string', description: 'File path (relative or absolute)' } }, required: ['path'] },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'write_file',
+      description: 'Create or overwrite a file with given content. Always show the full updated content.',
+      parameters: { type: 'object', properties: { path: { type: 'string' }, content: { type: 'string', description: 'Complete file content' } }, required: ['path', 'content'] },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'list_files',
+      description: 'List files in a directory. Use to explore project structure.',
+      parameters: { type: 'object', properties: { path: { type: 'string', default: '.' }, pattern: { type: 'string', default: '**/*', description: 'Glob pattern' } }, required: [] },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'search_files',
+      description: 'Search for a regex pattern inside files (like grep). Use to find code.',
+      parameters: { type: 'object', properties: { pattern: { type: 'string' }, path: { type: 'string', default: '.' }, filePattern: { type: 'string', default: '**/*' }, ignoreCase: { type: 'boolean', default: false } }, required: ['pattern'] },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'delete_file',
+      description: 'Delete a file permanently.',
+      parameters: { type: 'object', properties: { path: { type: 'string' } }, required: ['path'] },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'run_command',
+      description: 'Execute a shell command. Use for builds, tests, installs, etc.',
+      parameters: { type: 'object', properties: { command: { type: 'string' }, cwd: { type: 'string', description: 'Working directory', default: '.' }, timeout: { type: 'number', default: 30000 } }, required: ['command'] },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'detect_build_system',
+      description: 'Detect all build systems in a project (Xcode, SwiftPM, Gradle/Android, Maven, Flutter, npm/TypeScript, React Native, .NET, Cargo, Go, Python, CMake) and the exact build command for each.',
+      parameters: { type: 'object', properties: { path: { type: 'string', description: 'Project directory (default: current)' } }, required: [] },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'build_project',
+      description: 'Build/compile the project and verify ZERO errors, exactly as Xcode, VS Code, or Android Studio would. Auto-detects the language and build system. ALWAYS call this after making code changes to guarantee the code compiles cleanly. Returns success/failure with the exact error lines if any.',
+      parameters: {
+        type: 'object',
+        properties: {
+          path: { type: 'string', description: 'Project directory (default: current)' },
+          system: { type: 'string', description: 'Force a specific system: xcode, spm, gradle, maven, flutter, typescript, react-native, dotnet, cargo, go, python, cmake, or auto (default)' },
+          timeout: { type: 'number', description: 'Build timeout in ms (default 300000)' },
+        },
+        required: [],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'generate_diagram',
+      description: 'Generate a PlantUML or Mermaid diagram. Types: flowchart, sequence, class, architecture, component, er, state. Architecture and class diagrams can be AUTO-GENERATED by scanning a project (pass projectPath). Other types take steps like ["User -> API: login", "API -> DB: query"]. Returns diagram source + a preview URL, optionally saves to a file.',
+      parameters: {
+        type: 'object',
+        properties: {
+          type: { type: 'string', enum: ['flowchart', 'sequence', 'class', 'architecture', 'component', 'er', 'state'], description: 'Diagram type (default: flowchart)' },
+          format: { type: 'string', enum: ['plantuml', 'mermaid'], description: 'Output format (default: plantuml)' },
+          title: { type: 'string', description: 'Diagram title' },
+          steps: { type: 'array', items: { type: 'string' }, description: 'Edges as "From -> To: label" strings' },
+          projectPath: { type: 'string', description: 'Project dir to scan (auto-generates architecture/class diagrams)' },
+          content: { type: 'string', description: 'Raw PlantUML/Mermaid body, used verbatim (advanced)' },
+          output: { type: 'string', description: 'File path to save the diagram source (.puml/.mmd)' },
+        },
+        required: [],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'recommend_development',
+      description: 'Full project health audit + prioritized development roadmap. Runs build verification, security scan, dependency audit, DI/architecture check, mobile issue scan, test/CI/docs presence checks — then returns a health score (0-100, graded A-F) and recommendations bucketed NOW / NEXT / LATER, each with the exact DevLab tool to fix it. Use when the user asks "what should I fix/improve/build next?"',
+      parameters: {
+        type: 'object',
+        properties: {
+          path: { type: 'string', description: 'Project directory (default: current)' },
+          quick: { type: 'boolean', description: 'Skip build + dependency audit for a fast pass (default false)' },
+        },
+        required: [],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'project_rules',
+      description: 'Manage per-project development rules. action=show: list & display discovered rule files (DEVLAB.md, CLAUDE.md, copilot-instructions.md, .cursorrules, Cursor .mdc rules, Claude skills, AGENTS.md). action=init: create a DEVLAB.md — pass content (rules text from the user) or from (import an existing file like CLAUDE.md). Rules are auto-injected into the agent for every chat in that project.',
+      parameters: {
+        type: 'object',
+        properties: {
+          action: { type: 'string', enum: ['show', 'init'], description: 'show (default) or init' },
+          path: { type: 'string', description: 'Project directory (default: current)' },
+          content: { type: 'string', description: 'Rules markdown to save (init only)' },
+          from: { type: 'string', description: 'Relative path of existing rules file to import, e.g. CLAUDE.md (init only)' },
+        },
+        required: [],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'generate_rubric',
+      description: 'Generate evaluation rubric JSON, requirements JSON, and markdown docs (RUBRIC.md, REQUIREMENTS.md, plus PR_REVIEW.md for PRs). target=project/framework: stack-aware rubric (code quality, architecture, testing, security, docs, CI, mobile UX) + project requirements with acceptance criteria. target=pr: PR review rubric + merge requirements + review checklist, using the git diff vs base branch. Files are written to <path>/.devlab/rubrics/ by default.',
+      parameters: {
+        type: 'object',
+        properties: {
+          path: { type: 'string', description: 'Project directory (default: current)' },
+          target: { type: 'string', enum: ['project', 'framework', 'pr'], description: 'What to generate for (default: project)' },
+          title: { type: 'string', description: 'Custom rubric title' },
+          base: { type: 'string', description: 'Git base ref for PR diff, e.g. main (pr only)' },
+          requirements: { type: 'array', items: { type: 'string' }, description: 'Extra custom requirements to include' },
+          outputDir: { type: 'string', description: 'Output directory (default: <path>/.devlab/rubrics)' },
+          write: { type: 'boolean', description: 'Write files to disk (default true; false returns content inline)' },
+        },
+        required: [],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'score_rubric',
+      description: 'Evaluate a project or PR against its rubric (from generate_rubric, or auto-generated on the fly). Runs automated checks per criterion — test ratio, security scan, lint config, README, CI, secrets/debug code in PR diffs — and produces a weighted score (1-4), pass/fail verdict, action items, and a filled-in scorecard (scorecard.json + SCORECARD.md). Use after generate_rubric, or standalone to grade any project/PR.',
+      parameters: {
+        type: 'object',
+        properties: {
+          path: { type: 'string', description: 'Project directory (default: current)' },
+          target: { type: 'string', enum: ['project', 'pr'], description: 'Override what to score (default: rubric.json type, or project)' },
+          rubricFile: { type: 'string', description: 'Path to a rubric JSON (default: <path>/.devlab/rubrics/rubric.<target>.json)' },
+          base: { type: 'string', description: 'Git base ref for PR scoring, e.g. main' },
+          prNumber: { type: 'number', description: 'PR number — saves a per-PR scorecard (scorecard.pr-<n>.json) instead of overwriting' },
+          write: { type: 'boolean', description: 'Write scorecard files (default true)' },
+          outputDir: { type: 'string', description: 'Output directory (default: <path>/.devlab/rubrics)' },
+        },
+        required: [],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'docker',
+      description: 'Docker operations. action=status: check install/daemon; ps: list containers (all:true for stopped too); images: list images; build: build image (needs tag); run: start container (image, ports ["8080:80"], env, volumes, command); logs: container logs; stop: stop container; compose: manage docker-compose (composeAction: up/down/ps/logs/restart). Degrades gracefully with install hints if Docker is missing.',
+      parameters: {
+        type: 'object',
+        properties: {
+          action: { type: 'string', enum: ['status', 'ps', 'images', 'build', 'run', 'logs', 'stop', 'compose'], description: 'Operation to perform' },
+          path: { type: 'string', description: 'Project directory (build/compose)' },
+          tag: { type: 'string', description: 'Image tag for build, e.g. myapp:latest' },
+          image: { type: 'string', description: 'Image for run' },
+          container: { type: 'string', description: 'Container name/id (logs/stop)' },
+          command: { type: 'string', description: 'Command to run in container' },
+          name: { type: 'string', description: 'Container name (run)' },
+          ports: { type: 'array', items: { type: 'string' }, description: 'Port mappings like "8080:80"' },
+          env: { type: 'object', description: 'Environment variables' },
+          volumes: { type: 'array', items: { type: 'string' }, description: 'Volume mounts like "/host:/container"' },
+          all: { type: 'boolean', description: 'Include stopped containers (ps)' },
+          tail: { type: 'number', description: 'Log lines (default 100)' },
+          composeAction: { type: 'string', enum: ['up', 'down', 'ps', 'logs', 'restart'], description: 'Compose subcommand' },
+          service: { type: 'string', description: 'Compose service name' },
+        },
+        required: ['action'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'docker_sandbox',
+      description: 'Run a command in an isolated throwaway Docker container — the SAFEST way to execute untrusted/experimental code. Project mounted READ-ONLY at /workspace, no network by default, 512MB memory / 1 CPU limits, auto-removed. Example: test a script, run untrusted code, try a different runtime version.',
+      parameters: {
+        type: 'object',
+        properties: {
+          command: { type: 'string', description: 'Shell command to run inside the sandbox' },
+          image: { type: 'string', description: 'Base image (default node:20-alpine); e.g. python:3.12-slim, golang:1.22' },
+          projectPath: { type: 'string', description: 'Project dir mounted read-only at /workspace' },
+          network: { type: 'boolean', description: 'Allow network access (default false)' },
+          timeout: { type: 'number', description: 'Timeout ms (default 120000)' },
+        },
+        required: ['command'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'generate_dockerfile',
+      description: 'Generate a production-ready multi-stage Dockerfile + .dockerignore (and optional docker-compose.yml) for a project. Auto-detects stack: Node/Next.js/Express, Python/Django, Go, Java (Maven/Gradle). Uses best practices: multi-stage builds, non-root user, layer caching. Works without Docker installed.',
+      parameters: {
+        type: 'object',
+        properties: {
+          path: { type: 'string', description: 'Project directory (default: current)' },
+          compose: { type: 'boolean', description: 'Also generate docker-compose.yml' },
+          write: { type: 'boolean', description: 'Write files (default true; false previews)' },
+        },
+        required: [],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'pr_prompt_statement',
+      description: 'Generate PROMPT_STATEMENT.md for a PR — the task/problem statement behind the change. Auto-fills title, commits, areas touched, and diff stats from git (vs base branch); includes problem statement, acceptance criteria (linked to baseline + rubric), and out-of-scope sections. Written to .devlab/pr/PROMPT_STATEMENT.md.',
+      parameters: {
+        type: 'object',
+        properties: {
+          path: { type: 'string', description: 'Repo directory (default: current)' },
+          base: { type: 'string', description: 'Base branch/ref to diff against, e.g. main' },
+          title: { type: 'string', description: 'PR title (default: first commit subject)' },
+          problem: { type: 'string', description: 'Problem statement text (default: placeholder to fill in)' },
+          write: { type: 'boolean', description: 'Write file (default true; false returns markdown inline)' },
+        },
+        required: [],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'pr_baseline',
+      description: 'Baseline tooling for PRs. action=capture: detect + run lint/typecheck/test/build (auto-detected for node/flutter/swift/gradle/python/go/maven) and save results as .devlab/pr/<label>.json — run with label "baseline" on the base branch, then again on the PR branch. action=compare: diff two baselines and classify each check as REGRESSION / fixed / pre-existing-failure / still-passing, with a mergeSafe verdict. action=detect: list detected tooling without running.',
+      parameters: {
+        type: 'object',
+        properties: {
+          action: { type: 'string', enum: ['capture', 'compare', 'detect'], description: 'Operation (default: capture)' },
+          path: { type: 'string', description: 'Repo directory (default: current)' },
+          label: { type: 'string', description: 'Snapshot label for capture (default: baseline)' },
+          checks: { type: 'array', items: { type: 'string' }, description: 'Limit to specific checks: lint, typecheck, test, build' },
+          before: { type: 'string', description: 'Compare: earlier snapshot label (default: baseline)' },
+          after: { type: 'string', description: 'Compare: later snapshot label (default: current, captured fresh if missing)' },
+          timeout: { type: 'number', description: 'Per-check timeout ms (default 300000)' },
+        },
+        required: [],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'knowledge_base',
+      description: 'Per-repo knowledge base (.devlab/kb/KNOWLEDGE.md) that accumulates learnings from PRs — auto-injected into the agent context for future code writing in this repo. action=add: record a lesson (category: pattern/gotcha/decision/convention/area). action=harvest: mine a PR diff for knowledge candidates (fix/revert commits, NOTE/WARNING comments, new deps, touched areas) — review then add the good ones. action=show: display or search entries. Use after completing a PR, after fixing a tricky bug, or when the user explains why something is done a certain way.',
+      parameters: {
+        type: 'object',
+        properties: {
+          action: { type: 'string', enum: ['add', 'harvest', 'show'], description: 'Operation (default: show)' },
+          path: { type: 'string', description: 'Repo directory (default: current)' },
+          category: { type: 'string', enum: ['pattern', 'gotcha', 'decision', 'convention', 'area'], description: 'Entry category (add)' },
+          text: { type: 'string', description: 'The lesson to record — concise, actionable (add)' },
+          pr: { type: 'string', description: 'PR reference, e.g. #42 (add)' },
+          files: { type: 'array', items: { type: 'string' }, description: 'Related files (add)' },
+          base: { type: 'string', description: 'Base ref for harvest diff, e.g. main' },
+          query: { type: 'string', description: 'Search filter (show)' },
+        },
+        required: [],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'set_privacy',
+      description: 'Get or set the repo privacy mode. mode=local-only HARD-BLOCKS all cloud LLM providers (Groq, Claude, non-localhost endpoints) — code is guaranteed never to leave this machine; all inference runs on local Ollama/vLLM. mode=open allows cloud models. action=status shows the current mode. Writes .devlab/privacy.json (commit it to enforce team-wide).',
+      parameters: {
+        type: 'object',
+        properties: {
+          action: { type: 'string', enum: ['status', 'set'], description: 'Operation (default: status)' },
+          mode: { type: 'string', enum: ['local-only', 'open'], description: 'Privacy mode to set (set)' },
+          path: { type: 'string', description: 'Repo directory (default: current)' },
+        },
+        required: [],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'delegate_task',
+      description: 'Spawn a subagent with ISOLATED context to handle a focused subtask — keeps your own context clean. Roles: explorer (read-only codebase research), coder (implement a specific change), tester (run/fix tests and builds), reviewer (read-only bug/security review), general (all tools). You get back only a compact report. Use for: large codebase exploration, independent parallel subtasks, verbose operations (test runs), or focused reviews. Provide COMPLETE context in the task — subagents cannot see your conversation. Pass tasks array for multiple sequential subtasks.',
+      parameters: {
+        type: 'object',
+        properties: {
+          task: { type: 'string', description: 'Complete, self-contained task description with all needed context' },
+          role: { type: 'string', enum: ['explorer', 'coder', 'tester', 'reviewer', 'general'], description: 'Subagent role (default: general)' },
+          path: { type: 'string', description: 'Working directory (default: current project)' },
+          context: { type: 'string', description: 'Extra context from your conversation the subagent needs' },
+          maxIterations: { type: 'number', description: 'Step limit (default 15, max 25)' },
+          tasks: { type: 'array', items: { type: 'object' }, description: 'Multiple tasks [{task, role, context}] run sequentially instead of a single task' },
+        },
+        required: [],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'semantic_search',
+      description: 'Search the codebase BY MEANING, not just exact text — like Cursor\'s semantic index. Finds code by concept: "where are auth tokens refreshed", "retry logic for network calls", "how errors get logged". Uses Ollama embeddings when available, code-aware TF-IDF otherwise (camelCase/snake_case splitting). Auto-builds the index on first use, incremental updates after. Prefer this over search_files when you don\'t know the exact string to grep.',
+      parameters: {
+        type: 'object',
+        properties: {
+          query: { type: 'string', description: 'Natural-language or code concept query' },
+          path: { type: 'string', description: 'Project directory (default: current)' },
+          maxResults: { type: 'number', description: 'Max results (default 8)' },
+        },
+        required: ['query'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'build_code_index',
+      description: 'Build or refresh the semantic code index (.devlab/index/). Incremental — only re-indexes changed files (content hashes). action=status shows index freshness. Use force:true for a full rebuild. Run after large code changes for best semantic_search results.',
+      parameters: {
+        type: 'object',
+        properties: {
+          path: { type: 'string', description: 'Project directory (default: current)' },
+          force: { type: 'boolean', description: 'Full rebuild ignoring cache' },
+          action: { type: 'string', enum: ['build', 'status'], description: 'build (default) or status' },
+        },
+        required: [],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'check_endpoint_conflicts',
+      description: 'Detect duplicate/conflicting HTTP endpoint registrations — the same METHOD+route handled by multiple classes/files/handlers (Express, NestJS, Spring, Flask/FastAPI, Go). Finds shadowed handlers where changes silently do nothing, and catch-all vs specific-method overlaps. Run this after adding/modifying any endpoint. If conflicts are found, PROMPT THE USER to decide which handler should own the route.',
+      parameters: {
+        type: 'object',
+        properties: {
+          path: { type: 'string', description: 'Project directory (default: current)' },
+          files: { type: 'array', items: { type: 'string' }, description: 'Only report conflicts involving these files (still scans whole project for comparison)' },
+        },
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'check_race_conditions',
+      description: 'Heuristic scan for concurrency hazards: check-then-act on files (TOCTOU), shared module-level state mutated in async handlers, non-atomic read-modify-write of JSON files, fire-and-forget async calls, counter increments without atomicity. Run after writing async/handler code. HIGH findings should be confirmed with the user before continuing.',
+      parameters: {
+        type: 'object',
+        properties: {
+          path: { type: 'string', description: 'Project directory (default: current)' },
+          files: { type: 'array', items: { type: 'string' }, description: 'Limit scan to specific files' },
+        },
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'github_pr',
+      description: 'GitHub PR bot. action=list: open PRs in the repo (auto-detected from git remote, or pass owner/repo). action=get: PR details + changed files. action=comment: post a comment (needs number, body). action=review: THE BOT — scores the PR with the rubric, runs baseline regression comparison, and posts a full scorecard comment to the PR (post:false to preview locally). action=setup_ci: generate .github/workflows/devlab-review.yml that runs this review on every PR and blocks merge on fail/regression. Requires GITHUB_TOKEN in .env (fine-grained PAT with pull-request write).',
+      parameters: {
+        type: 'object',
+        properties: {
+          action: { type: 'string', enum: ['list', 'get', 'comment', 'review', 'setup_ci'], description: 'Operation' },
+          path: { type: 'string', description: 'Repo directory (default: current)' },
+          owner: { type: 'string', description: 'Repo owner (default: from git remote)' },
+          repo: { type: 'string', description: 'Repo name (default: from git remote)' },
+          number: { type: 'number', description: 'PR number' },
+          body: { type: 'string', description: 'Comment body (comment action)' },
+          base: { type: 'string', description: 'Base ref for review diff, e.g. main' },
+          state: { type: 'string', enum: ['open', 'closed', 'all'], description: 'PR state filter (list)' },
+          post: { type: 'boolean', description: 'Post review to GitHub (default true; false = preview only)' },
+          write: { type: 'boolean', description: 'Write workflow file (setup_ci; default true)' },
+        },
+        required: ['action'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'git_status',
+      description: 'Get git repo status, recent commits, branches, and remotes.',
+      parameters: { type: 'object', properties: { path: { type: 'string', default: '.' } }, required: [] },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'git_diff',
+      description: 'Get uncommitted changes in the git repo.',
+      parameters: { type: 'object', properties: { path: { type: 'string', default: '.' }, staged: { type: 'boolean', default: false }, file: { type: 'string' } }, required: [] },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'git_commit',
+      description: 'Stage all changes and create a git commit.',
+      parameters: { type: 'object', properties: { message: { type: 'string' }, path: { type: 'string', default: '.' } }, required: ['message'] },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'git_create_branch',
+      description: 'Create and checkout a new git branch.',
+      parameters: { type: 'object', properties: { name: { type: 'string' }, path: { type: 'string', default: '.' } }, required: ['name'] },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'git_push',
+      description: 'Push current branch to remote.',
+      parameters: { type: 'object', properties: { path: { type: 'string', default: '.' }, remote: { type: 'string', default: 'origin' }, branch: { type: 'string', default: 'HEAD' } }, required: [] },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'web_search',
+      description: 'Search the web via DuckDuckGo. Use for docs, errors, and unknown topics.',
+      parameters: { type: 'object', properties: { query: { type: 'string' }, maxResults: { type: 'number', default: 5 } }, required: ['query'] },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'fetch_url',
+      description: 'Fetch and extract text content from a URL.',
+      parameters: { type: 'object', properties: { url: { type: 'string' } }, required: ['url'] },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'search_stackoverflow',
+      description: 'Search StackOverflow for coding answers.',
+      parameters: { type: 'object', properties: { query: { type: 'string' }, maxResults: { type: 'number', default: 3 } }, required: ['query'] },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'remember',
+      description: 'Save important information to persistent long-term memory (survives across sessions).',
+      parameters: { type: 'object', properties: { key: { type: 'string', description: 'Unique descriptive key' }, value: { type: 'string' }, tags: { type: 'array', items: { type: 'string' } } }, required: ['key', 'value'] },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'recall',
+      description: 'Search long-term memory for previously saved information.',
+      parameters: { type: 'object', properties: { query: { type: 'string' } }, required: ['query'] },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'scan_security',
+      description: 'Scan a file or project for security vulnerabilities (secrets, injection, XSS, etc.).',
+      parameters: { type: 'object', properties: { path: { type: 'string' }, projectLevel: { type: 'boolean', default: false, description: 'Scan entire project instead of single file' } }, required: ['path'] },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'analyze_project',
+      description: 'Analyze project structure: language, frameworks, file count, git info, README.',
+      parameters: { type: 'object', properties: { path: { type: 'string', default: '.' } }, required: [] },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'generate_tests',
+      description: 'Generate test stubs for a source file (Jest/Vitest/Pytest).',
+      parameters: { type: 'object', properties: { path: { type: 'string' }, framework: { type: 'string', enum: ['jest', 'vitest', 'pytest', 'auto'], default: 'auto' } }, required: ['path'] },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'analyze_performance',
+      description: 'Detect performance issues in a file: N+1 queries, O(n²) loops, memory leaks.',
+      parameters: { type: 'object', properties: { path: { type: 'string' } }, required: ['path'] },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'detect_mobile_platform',
+      description: 'Detect mobile project type: Swift (iOS/macOS), Kotlin (Android), React Native, or Flutter. Returns platform, build system, and project structure details.',
+      parameters: { type: 'object', properties: { path: { type: 'string', default: '.', description: 'Project path' } }, required: [] },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'analyze_mobile_project',
+      description: 'Deep analysis of a mobile project: files, dependencies, permissions, entitlements, pubspec, package.json, Gradle config, and design handoff assets when present.',
+      parameters: { type: 'object', properties: { path: { type: 'string', default: '.' } }, required: [] },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'analyze_design_assets',
+      description: 'Inspect Figma or Sketch handoff assets for mobile UI work. Summarizes pages, frames, artboards, components, and implementation hints.',
+      parameters: { type: 'object', properties: { path: { type: 'string', default: '.' } }, required: [] },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'generate_mobile_ui',
+      description: 'Generate platform-specific mobile UI scaffolds from a Figma or Sketch URL (or local design export). Can preview or write files.',
+      parameters: {
+        type: 'object',
+        properties: {
+          designSource: { type: 'string', description: 'Figma/Sketch URL or local design file path' },
+          platform: { type: 'string', enum: ['swift', 'kotlin', 'react-native', 'flutter', 'ios', 'android', 'rn', 'swiftui'] },
+          outputDir: { type: 'string', default: 'generated-ui' },
+          write: { type: 'boolean', default: false },
+        },
+        required: ['designSource', 'platform'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'run_mobile_tests',
+      description: 'Run tests for Swift (swift test / xcodebuild), Kotlin (gradle test), React Native (jest), or Flutter (flutter test).',
+      parameters: { type: 'object', properties: { path: { type: 'string', default: '.' }, platform: { type: 'string', enum: ['swift', 'kotlin', 'react-native', 'flutter', 'auto'], default: 'auto' } }, required: [] },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'run_mobile_lint',
+      description: 'Run linter: SwiftLint, ktlint, ESLint (RN), or dart analyze (Flutter). Auto-fixes where possible.',
+      parameters: { type: 'object', properties: { path: { type: 'string', default: '.' }, platform: { type: 'string', enum: ['swift', 'kotlin', 'react-native', 'flutter', 'auto'], default: 'auto' }, fix: { type: 'boolean', default: false, description: 'Auto-fix lint errors' } }, required: [] },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'build_mobile',
+      description: 'Build a mobile project: swift build, ./gradlew assembleDebug, react-native bundle, flutter build apk.',
+      parameters: { type: 'object', properties: { path: { type: 'string', default: '.' }, platform: { type: 'string', enum: ['swift', 'kotlin', 'react-native', 'flutter', 'auto'], default: 'auto' }, release: { type: 'boolean', default: false } }, required: [] },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'scan_mobile_security',
+      description: 'OWASP Mobile Top-10 security scan for Swift, Kotlin, React Native, or Flutter. Detects hardcoded secrets, insecure storage, cleartext HTTP, weak crypto, disabled cert pinning, exported activities, and more.',
+      parameters: { type: 'object', properties: { path: { type: 'string', default: '.' }, platform: { type: 'string', enum: ['swift', 'kotlin', 'react-native', 'flutter', 'auto'], default: 'auto' } }, required: [] },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'detect_mobile_issues',
+      description: 'Detect ALL issues in a mobile project (tests, lint, security, missing SDKs).',
+      parameters: { type: 'object', properties: { path: { type: 'string', default: '.' } }, required: [] },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'detect_automation_platform',
+      description: 'Detect Selenium/Appium automation projects and identify the runner, configs, and framework signals.',
+      parameters: { type: 'object', properties: { path: { type: 'string', default: '.' } }, required: [] },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'analyze_automation_project',
+      description: 'Deep analysis of a Selenium or Appium project: configs, test files, page objects, runners, and workflow hints.',
+      parameters: { type: 'object', properties: { path: { type: 'string', default: '.' } }, required: [] },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'run_automation_tests',
+      description: 'Run Selenium/Appium tests using the detected runner or package scripts.',
+      parameters: { type: 'object', properties: { path: { type: 'string', default: '.' }, platform: { type: 'string', enum: ['selenium', 'appium', 'auto'], default: 'auto' } }, required: [] },
+    },
+  },
+  // ── Code review tools ──────────────────────────────────────────────────────
+  {
+    type: 'function',
+    function: {
+      name: 'review_file',
+      description: 'Deep code review of a single file: static analysis + LLM semantic review. Returns findings with severity, category, problematic code, and the BEST fix. Works for JS/TS/Python/Swift/Kotlin/Dart/Go/Java/Rust.',
+      parameters: {
+        type: 'object',
+        properties: {
+          path: { type: 'string', description: 'File path to review' },
+          llm: { type: 'boolean', default: true, description: 'Use LLM for semantic review (more thorough)' },
+          context: { type: 'string', description: 'Optional context about the project' },
+        },
+        required: ['path'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'review_project',
+      description: 'Thorough code review of an entire project. Reviews all source files, grades each, finds cross-cutting issues. Use for full project audits.',
+      parameters: {
+        type: 'object',
+        properties: {
+          path: { type: 'string', default: '.' },
+          llm: { type: 'boolean', default: true },
+          maxFiles: { type: 'number', default: 20, description: 'Max files to review (higher = slower but more thorough)' },
+        },
+        required: [],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'review_diff',
+      description: 'Review only the code that has changed (git diff). Use before committing or for PR review. Reviews changed files AND the diff holistically.',
+      parameters: {
+        type: 'object',
+        properties: {
+          path: { type: 'string', default: '.' },
+          staged: { type: 'boolean', default: false, description: 'Review staged changes only' },
+          llm: { type: 'boolean', default: true },
+        },
+        required: [],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'apply_fix',
+      description: 'Apply a specific fix from a code review finding to the file.',
+      parameters: {
+        type: 'object',
+        properties: {
+          path: { type: 'string' },
+          finding: { type: 'object', description: 'The finding object from review_file with currentCode and fix fields' },
+        },
+        required: ['path', 'finding'],
+      },
+    },
+  },
+  // ── DI / Architecture tools ────────────────────────────────────────────────
+  {
+    type: 'function',
+    function: {
+      name: 'check_di',
+      description: 'Check whether dependency injection is implemented CORRECTLY for a specific platform (swift, kotlin, flutter, react-native, web, python). Returns a PASS/WARN/FAIL verdict per platform with violation counts and suggested fixes. Use platform "all" to audit every platform in a monorepo, or "auto" to detect.',
+      parameters: {
+        type: 'object',
+        properties: {
+          path: { type: 'string', description: 'Project directory to check (default: current directory)' },
+          platform: { type: 'string', enum: ['auto', 'all', 'swift', 'kotlin', 'flutter', 'react-native', 'web', 'python'], description: 'Platform to verify DI correctness for (default: auto-detect)' },
+        },
+        required: [],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'analyze_di',
+      description: 'Full Dependency Injection correctness and architecture conformance analysis. Detects: constructor vs property injection, DIP violations, singleton abuse, service locator anti-pattern, layer violations, missing interfaces, circular deps, over-injection. Works for Swift/Kotlin/Flutter/RN/TS/Python. Returns grade A-F with concrete fixes.',
+      parameters: {
+        type: 'object',
+        properties: {
+          path: { type: 'string', default: '.', description: 'Project path' },
+          llm: { type: 'boolean', default: true, description: 'Use LLM for deep semantic DI analysis' },
+          maxFiles: { type: 'number', default: 15, description: 'Max files for LLM analysis' },
+        },
+        required: [],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'detect_architecture',
+      description: 'Detect software architecture pattern (Clean Architecture, MVVM, MVP, BLoC, Redux) and DI framework (Hilt, Koin, get_it, Riverpod, InversifyJS) in a project.',
+      parameters: {
+        type: 'object',
+        properties: { path: { type: 'string', default: '.' } },
+        required: [],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'detect_layer_violations',
+      description: 'Check for architecture layer violations: dependencies flowing in wrong direction (e.g. Domain importing Presentation, ViewModel accessing DB directly).',
+      parameters: {
+        type: 'object',
+        properties: {
+          path: { type: 'string', default: '.' },
+          architecture: { type: 'string', description: 'Architecture name (clean-architecture, MVVM, MVP, BLoC). Detected automatically if omitted.' },
+        },
+        required: [],
+      },
+    },
+  },
+  // ── Atlassian tools ──────────────────────────────────────────────────────────
+  {
+    type: 'function',
+    function: {
+      name: 'jira_search',
+      description: 'Search Jira issues using JQL.',
+      parameters: { type: 'object', properties: { jql: { type: 'string' }, maxResults: { type: 'number', default: 10 } }, required: ['jql'] },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'jira_get_issue',
+      description: 'Fetch a Jira issue by key.',
+      parameters: { type: 'object', properties: { issueKey: { type: 'string' } }, required: ['issueKey'] },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'jira_create_issue',
+      description: 'Create a Jira issue.',
+      parameters: {
+        type: 'object',
+        properties: {
+          projectKey: { type: 'string' },
+          issueType: { type: 'string' },
+          summary: { type: 'string' },
+          description: { type: 'string' },
+          priority: { type: 'string' },
+          labels: { type: 'string' },
+        },
+        required: ['projectKey', 'issueType', 'summary'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'jira_add_comment',
+      description: 'Add a comment to a Jira issue.',
+      parameters: { type: 'object', properties: { issueKey: { type: 'string' }, comment: { type: 'string' } }, required: ['issueKey', 'comment'] },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'jira_get_transitions',
+      description: 'List available status transitions for a Jira issue.',
+      parameters: { type: 'object', properties: { issueKey: { type: 'string' } }, required: ['issueKey'] },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'jira_transition_issue',
+      description: 'Transition a Jira issue to a new status.',
+      parameters: { type: 'object', properties: { issueKey: { type: 'string' }, transitionId: { type: 'string' } }, required: ['issueKey', 'transitionId'] },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'confluence_search',
+      description: 'Search Confluence pages using CQL.',
+      parameters: { type: 'object', properties: { cql: { type: 'string' }, limit: { type: 'number', default: 10 } }, required: ['cql'] },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'confluence_get_page',
+      description: 'Get a Confluence page by ID.',
+      parameters: { type: 'object', properties: { pageId: { type: 'string' } }, required: ['pageId'] },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'confluence_create_page',
+      description: 'Create a Confluence page.',
+      parameters: {
+        type: 'object',
+        properties: {
+          spaceKey: { type: 'string' },
+          title: { type: 'string' },
+          body: { type: 'string' },
+          parentPageId: { type: 'string' },
+        },
+        required: ['spaceKey', 'title', 'body'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'confluence_update_page',
+      description: 'Update a Confluence page.',
+      parameters: {
+        type: 'object',
+        properties: {
+          pageId: { type: 'string' },
+          title: { type: 'string' },
+          body: { type: 'string' },
+          currentVersion: { type: 'number' },
+        },
+        required: ['pageId', 'title', 'body', 'currentVersion'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'confluence_child_pages',
+      description: 'List child pages under a Confluence page.',
+      parameters: { type: 'object', properties: { pageId: { type: 'string' }, limit: { type: 'number', default: 25 } }, required: ['pageId'] },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'confluence_recent_pages',
+      description: 'List recent Confluence pages.',
+      parameters: { type: 'object', properties: {}, required: [] },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'run_ci',
+      description: 'Run the pre-PR CI gate: tests, security scan, dependency audit, and DI checks.',
+      parameters: {
+        type: 'object',
+        properties: {
+          path: { type: 'string', default: '.', description: 'Project path' },
+          coverage: { type: 'boolean', default: true },
+          maxFiles: { type: 'number', default: 15 },
+        },
+        required: [],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'validate_api_contracts',
+      description: 'Validate REST/GraphQL/OpenAPI/Postman contracts for missing spec fields, operation ids, responses, and schema quality.',
+      parameters: {
+        type: 'object',
+        properties: {
+          path: { type: 'string', default: '.', description: 'Project path' },
+        },
+        required: [],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'develop_from_jira',
+      description: 'Create a development brief from a Jira ticket, generate task breakdown, and optionally create a Confluence page and Jira comment.',
+      parameters: {
+        type: 'object',
+        properties: {
+          issueKey: { type: 'string' },
+          spaceKey: { type: 'string', description: 'Confluence space key for the generated brief' },
+          parentPageId: { type: 'string' },
+          pageTitle: { type: 'string' },
+          createPage: { type: 'boolean', default: true },
+          commentJira: { type: 'boolean', default: true },
+        },
+        required: ['issueKey'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'mcp_list_servers',
+      description: 'List configured MCP servers, discovered MCP tools, and connection errors.',
+      parameters: { type: 'object', properties: {}, required: [] },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'mcp_reload_servers',
+      description: 'Reload MCP servers from config file and refresh available MCP tools.',
+      parameters: { type: 'object', properties: {}, required: [] },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'mcp_catalog',
+      description: 'Show the built-in catalog of one-command-installable MCP servers (github, postgres, puppeteer, slack, filesystem, etc.) with what each requires and which are installed.',
+      parameters: { type: 'object', properties: {}, required: [] },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'mcp_suggest_servers',
+      description: 'Analyze the current project and suggest useful MCP servers to install (e.g., github for git repos, postgres if docker-compose has a database).',
+      parameters: { type: 'object', properties: { path: { type: 'string', description: 'Project path (default: current)' } }, required: [] },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'mcp_add_server',
+      description: 'Install/add an MCP server with ZERO manual JSON editing. Works with LOCAL servers (spawned via command/args) and REMOTE servers (hosted, via url — Streamable HTTP transport). For catalog servers (see mcp_catalog) just pass the name + any required values (tokens, URLs). If required values are missing, returns needsInput with exactly what to ask the user for. Custom local: pass command/args/env. Custom remote: pass url (+headers for auth). Auto-connects and lists the new tools.',
+      parameters: {
+        type: 'object',
+        properties: {
+          name: { type: 'string', description: 'Server name (catalog name or custom)' },
+          values: { type: 'object', description: 'Required values for catalog servers, e.g. {"token": "ghp_..."} or {"url": "postgresql://..."}' },
+          command: { type: 'string', description: 'Custom local server: executable' },
+          args: { type: 'array', items: { type: 'string' }, description: 'Custom local server: arguments' },
+          env: { type: 'object', description: 'Custom local server: environment variables' },
+          url: { type: 'string', description: 'Custom REMOTE server: HTTP(S) endpoint, e.g. https://mcp.example.com/mcp' },
+          headers: { type: 'object', description: 'Custom remote server: HTTP headers for auth, e.g. {"Authorization": "Bearer ..."}' },
+        },
+        required: ['name'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'mcp_remove_server',
+      description: 'Remove a configured MCP server by name.',
+      parameters: { type: 'object', properties: { name: { type: 'string' } }, required: ['name'] },
+    },
+  },
+];
+
+export const TOOL_DEFINITIONS = BASE_TOOL_DEFINITIONS;
+
+export async function getToolDefinitions() {
+  const mcpTools = await getMcpToolDefinitions();
+  return [...BASE_TOOL_DEFINITIONS, ...mcpTools];
+}
+
+// ── Tool executor ─────────────────────────────────────────────────────────────
+export async function executeTool(name, args = {}, context = {}) {
+  try {
+    if (isMcpTool(name)) {
+      return executeMcpTool(name, args);
+    }
+    switch (name) {
+      case 'read_file':            return files.readFile(args.path);
+      case 'write_file':           return files.writeFile(args.path, args.content);
+      case 'list_files':           return files.listFiles(args.path || '.', args.pattern || '**/*');
+      case 'search_files':         return files.searchFiles(args.pattern, { path: args.path, filePattern: args.filePattern, ignoreCase: args.ignoreCase });
+      case 'delete_file':          return files.deleteFile(args.path);
+      case 'run_command':          return shell.runCommand(args.command, { cwd: args.cwd || context.cwd, timeout: args.timeout });
+      case 'detect_build_system':  return builder.detectBuildSystems(args.path || context.cwd || '.');
+      case 'build_project':        return await builder.buildProject(args.path || context.cwd || '.', { system: args.system || 'auto', timeout: args.timeout || 300000 });
+      case 'generate_diagram':     return diagram.generateDiagram({ ...args, projectPath: args.projectPath || (args.type === 'architecture' || args.type === 'class' ? context.cwd : undefined) });
+      case 'recommend_development': return await advisor.recommendDevelopment(args.path || context.cwd || '.', { quick: args.quick });
+      case 'project_rules':        return args.action === 'init'
+        ? rules.initProjectRules(args.path || context.cwd || '.', { content: args.content, from: args.from })
+        : rules.loadProjectRules(args.path || context.cwd || '.');
+      case 'generate_rubric':      return rubric.generateRubric({ ...args, path: args.path || context.cwd || '.' });
+      case 'score_rubric':         return await rubric.scoreRubric({ ...args, path: args.path || context.cwd || '.' });
+      case 'docker': {
+        const d = args;
+        switch (d.action) {
+          case 'status':  return docker.dockerStatus();
+          case 'ps':      return docker.listContainers({ all: d.all });
+          case 'images':  return docker.listImages();
+          case 'build':   return docker.buildImage({ path: d.path || context.cwd, tag: d.tag, dockerfile: d.dockerfile, buildArgs: d.buildArgs });
+          case 'run':     return docker.runContainer(d);
+          case 'logs':    return docker.containerLogs(d);
+          case 'stop':    return docker.stopContainer(d);
+          case 'compose': return docker.composeAction({ path: d.path || context.cwd, action: d.composeAction || 'ps', service: d.service });
+          default:        return { error: `Unknown docker action: ${d.action}` };
+        }
+      }
+      case 'docker_sandbox':       return docker.sandboxRun({ ...args, projectPath: args.projectPath || context.cwd });
+      case 'generate_dockerfile':  return docker.generateDockerfile({ ...args, path: args.path || context.cwd || '.' });
+      case 'pr_prompt_statement':  return pr.generatePromptStatement({ ...args, path: args.path || context.cwd || '.' });
+      case 'knowledge_base': {
+        const k = { ...args, path: args.path || context.cwd || '.' };
+        if (k.action === 'add')     return knowledge.addKnowledge(k);
+        if (k.action === 'harvest') return knowledge.harvestFromPR(k);
+        return knowledge.showKnowledge(k);
+      }
+      case 'set_privacy': {
+        const privacy = await import('../privacy.js');
+        const cwd = args.path || context.cwd || process.cwd();
+        if (args.action === 'set' || args.mode) {
+          if (!args.mode) return { error: 'mode is required (local-only | open)' };
+          return { ...privacy.setPrivacyMode(args.mode, cwd), guarantee: args.mode === 'local-only' ? 'Cloud providers are now hard-blocked; code never leaves this machine.' : 'Cloud providers allowed.' };
+        }
+        return { mode: privacy.getPrivacyMode(cwd), cwd };
+      }
+      case 'delegate_task': {
+        const base = { path: args.path || context.cwd || process.cwd(), provider: context.provider, model: context.model };
+        if (args.tasks?.length) return runSubagents(args.tasks, base);
+        if (!args.task) return { roles: listRoles(), error: 'task (or tasks array) is required' };
+        return runSubagent({ ...base, task: args.task, role: args.role, context: args.context, maxIterations: args.maxIterations });
+      }
+      case 'semantic_search':      return semindex.searchIndex({ ...args, path: args.path || context.cwd || '.' });
+      case 'build_code_index':     return args.action === 'status'
+        ? semindex.indexStatus(args.path || context.cwd || '.')
+        : semindex.buildIndex({ ...args, path: args.path || context.cwd || '.' });
+      case 'check_endpoint_conflicts': return conflicts.checkEndpointConflicts({ ...args, path: args.path || context.cwd || '.' });
+      case 'check_race_conditions':    return conflicts.checkRaceConditions({ ...args, path: args.path || context.cwd || '.' });
+      case 'github_pr': {
+        const g = { ...args, path: args.path || context.cwd || '.' };
+        switch (g.action) {
+          case 'list':     return github.listPRs(g);
+          case 'get':      return github.getPR(g);
+          case 'comment':  return github.commentOnPR(g);
+          case 'review':   return github.reviewPR(g);
+          case 'setup_ci': return github.generateAction(g);
+          default:         return { error: `Unknown github_pr action: ${g.action}` };
+        }
+      }
+      case 'pr_baseline': {
+        const p = { ...args, path: args.path || context.cwd || '.' };
+        if (p.action === 'compare') return pr.compareBaseline(p);
+        if (p.action === 'detect')  return { detected: pr.detectTooling(p.path) };
+        return pr.captureBaseline(p);
+      }
+      case 'git_status':           return git.gitStatus(args.path);
+      case 'git_diff':             return git.gitDiff(args.path, { staged: args.staged, file: args.file });
+      case 'git_commit':           return git.gitCommit(args.message, args.path);
+      case 'git_create_branch':    return git.gitCreateBranch(args.name, args.path);
+      case 'git_push':             return git.gitPush(args.path, { remote: args.remote, branch: args.branch });
+      case 'web_search':           return web.webSearch(args.query, { maxResults: args.maxResults });
+      case 'fetch_url':            return web.fetchURL(args.url);
+      case 'search_stackoverflow': return web.searchStackOverflow(args.query, { maxResults: args.maxResults });
+      case 'remember':             memory.remember(args.key, args.value, args.tags, context.project); return { saved: true, key: args.key };
+      case 'recall':               return { memories: memory.recall(args.query) };
+      case 'scan_security':        return args.projectLevel ? code.scanSecurityProject(args.path) : code.scanSecurity(args.path);
+      case 'analyze_project':      return code.analyzeProject(args.path);
+      case 'generate_tests':       return code.generateTestStubs(args.path, { framework: args.framework });
+      case 'analyze_performance':  return code.analyzePerformance(args.path);
+      case 'scan_dependencies':    return code.scanDependencies(args.path);
+      case 'detect_issues': {
+        const { detectIssues } = await import('./fixer.js');
+        return detectIssues(args.path || '.');
+      }
+      case 'fix_project': {
+        const { detectIssues } = await import('./fixer.js');
+        return detectIssues(args.path || '.'); // return issues for agent to act on
+      }
+      // ── Mobile tools ──────────────────────────────────────────────────────
+      case 'detect_mobile_platform':  return mobile.detectMobilePlatform(args.path || '.');
+      case 'analyze_mobile_project':  return mobile.analyzeMobileProject(args.path || '.');
+      case 'analyze_design_assets':   return mobile.detectDesignAssets(args.path || '.');
+      case 'generate_mobile_ui':      return mobile.generateMobileUIFromDesign(args.designSource || args.url || args.path, args.platform, { outputDir: args.outputDir || args.output || 'generated-ui', write: args.write === true });
+      case 'run_mobile_tests':        return mobile.runMobileTests(args.path || '.', args.platform !== 'auto' ? args.platform : undefined);
+      case 'run_mobile_lint':         return args.fix ? mobile.fixMobileLint(args.path || '.', args.platform !== 'auto' ? args.platform : undefined) : mobile.runMobileLint(args.path || '.', args.platform !== 'auto' ? args.platform : undefined);
+      case 'build_mobile':            return mobile.buildMobileProject(args.path || '.', args.platform !== 'auto' ? args.platform : undefined, { release: args.release });
+      case 'scan_mobile_security':    return mobile.scanMobileSecurity(args.path || '.', args.platform !== 'auto' ? args.platform : undefined);
+      case 'detect_mobile_issues':    return mobile.detectMobileIssues(args.path || '.');
+      case 'detect_automation_platform': return automation.detectAutomationPlatform(args.path || '.');
+      case 'analyze_automation_project': return automation.analyzeAutomationProject(args.path || '.');
+      case 'run_automation_tests':    return automation.runAutomationTests(args.path || '.', args.platform !== 'auto' ? args.platform : undefined);
+      // ── Code review tools ──────────────────────────────────────────────────
+      case 'review_file': {
+        const { reviewFile } = await import('./reviewer.js');
+        return reviewFile(args.path, { llm: args.llm !== false, contextInfo: args.context });
+      }
+      case 'review_project': {
+        const { reviewProject } = await import('./reviewer.js');
+        return reviewProject(args.path || '.', { llm: args.llm !== false, maxFiles: args.maxFiles || 20 });
+      }
+      case 'review_diff': {
+        const { reviewDiff } = await import('./reviewer.js');
+        return reviewDiff(args.path || '.', { staged: args.staged, llm: args.llm !== false });
+      }
+      case 'apply_fix': {
+        const { applyFix } = await import('./reviewer.js');
+        return applyFix(args.path, args.finding);
+      }
+      // ── DI analysis ────────────────────────────────────────────────────────
+      case 'check_di':
+        return await diAnalyzer.checkDICorrectness(args.path || '.', args.platform || 'auto');
+      case 'analyze_di':
+        return diAnalyzer.analyzeDI(args.path || '.', { llm: args.llm !== false, maxFiles: args.maxFiles || 15 });
+      case 'detect_architecture':
+        return diAnalyzer.detectArchitecture(args.path || '.');
+      case 'detect_layer_violations':
+        return diAnalyzer.detectLayerViolations(args.path || '.', args.architecture);
+      // ── Atlassian tools ─────────────────────────────────────────────────────
+      case 'jira_search':
+        return atlassian.searchJiraIssues(args.jql, { maxResults: args.maxResults || 10 });
+      case 'jira_get_issue':
+        return atlassian.getJiraIssue(args.issueKey);
+      case 'jira_create_issue':
+        return atlassian.createJiraIssue(args);
+      case 'jira_add_comment':
+        return atlassian.addJiraComment(args.issueKey, args.comment);
+      case 'jira_get_transitions':
+        return atlassian.getJiraTransitions(args.issueKey);
+      case 'jira_transition_issue':
+        return atlassian.transitionJiraIssue(args.issueKey, args.transitionId);
+      case 'confluence_search':
+        return atlassian.searchConfluencePages(args.cql, { limit: args.limit || 10 });
+      case 'confluence_get_page':
+        return atlassian.getConfluencePage(args.pageId);
+      case 'confluence_create_page':
+        return atlassian.createConfluencePage(args);
+      case 'confluence_update_page':
+        return atlassian.updateConfluencePage(args);
+      case 'confluence_child_pages':
+        return atlassian.getConfluenceChildPages(args.pageId, { limit: args.limit || 25 });
+      case 'confluence_recent_pages':
+        return atlassian.getRecentConfluencePages();
+      case 'run_ci':
+        return ci.runCI(args.path || '.', { coverage: args.coverage !== false, maxFiles: args.maxFiles || 15 });
+      case 'validate_api_contracts': {
+        const { validateApiContracts } = await import('./reviewer.js');
+        return validateApiContracts(args.path || '.');
+      }
+      case 'develop_from_jira':
+        return atlassian.developFromJira(args.issueKey, {
+          spaceKey: args.spaceKey,
+          parentPageId: args.parentPageId,
+          pageTitle: args.pageTitle,
+          createPage: args.createPage !== false,
+          commentJira: args.commentJira !== false,
+        });
+      case 'mcp_list_servers':
+        return getMcpStatus();
+      case 'mcp_reload_servers':
+        return reloadMcpServers();
+      case 'mcp_catalog':
+        return getMcpCatalog();
+      case 'mcp_suggest_servers':
+        return suggestMcpServers(args.path || context.cwd || '.');
+      case 'mcp_add_server':
+        return await addMcpServer(args.name, { values: args.values || {}, command: args.command, args: args.args, env: args.env, url: args.url, headers: args.headers });
+      case 'mcp_remove_server':
+        return await removeMcpServer(args.name);
+      default: return { error: `Unknown tool: ${name}` };
+    }
+  } catch (err) {
+    return { error: err.message, tool: name };
+  }
+}

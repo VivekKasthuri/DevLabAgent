@@ -1,0 +1,181 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+		/* Begin PBXBuildFile section */
+		AA000001 /* DevLabApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100001; };
+		AA000002 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100002; };
+		AA000003 /* AgentService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100003; };
+		AA000004 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100004; };
+		AA000005 /* FileTreeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100005; };
+		AA000006 /* EditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100006; };
+		AA000007 /* ChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100007; };
+		AA000008 /* TerminalService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100008; };
+		AA000009 /* TerminalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100009; };
+		AA000010 /* TerminalHelper.c in Sources */ = {isa = PBXBuildFile; fileRef = AA100010; };
+		AA000011 /* AuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100013; };
+		AA000012 /* AuthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100014; };
+		AA000015 /* ServerSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100015; };
+		/* End PBXBuildFile section */
+
+		/* Begin PBXFileReference section */
+		AA100001 /* DevLabApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DevLabApp.swift; sourceTree = "<group>"; };
+		AA100002 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
+		AA100003 /* AgentService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentService.swift; sourceTree = "<group>"; };
+		AA100004 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		AA100005 /* FileTreeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileTreeView.swift; sourceTree = "<group>"; };
+		AA100006 /* EditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorView.swift; sourceTree = "<group>"; };
+		AA100007 /* ChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatView.swift; sourceTree = "<group>"; };
+		AA100008 /* TerminalService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalService.swift; sourceTree = "<group>"; };
+		AA100009 /* TerminalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalView.swift; sourceTree = "<group>"; };
+		AA100010 /* TerminalHelper.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = TerminalHelper.c; sourceTree = "<group>"; };
+		AA100011 /* TerminalHelper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TerminalHelper.h; sourceTree = "<group>"; };
+		AA100012 /* DevLab-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "DevLab-Bridging-Header.h"; sourceTree = "<group>"; };
+		AA100013 /* AuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthService.swift; sourceTree = "<group>"; };
+		AA100014 /* AuthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthView.swift; sourceTree = "<group>"; };
+		AA100015 /* ServerSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerSettingsView.swift; sourceTree = "<group>"; };
+		AAPROD01 /* DevLab.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DevLab.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		/* End PBXFileReference section */
+
+		/* Begin PBXGroup section */
+		AAGROUP0 = {
+			isa = PBXGroup;
+			children = (AAGROUP1, AAPROD00);
+			sourceTree = "<group>";
+		};
+		AAGROUP1 /* DevLab */ = {
+			isa = PBXGroup;
+			children = (AA100001, AA100002, AA100003, AA100004, AA100005, AA100006, AA100007, AA100008, AA100009, AA100010, AA100011, AA100012, AA100013, AA100014, AA100015);
+			path = DevLab;
+			sourceTree = "<group>";
+		};
+		AAPROD00 /* Products */ = {
+			isa = PBXGroup;
+			children = (AAPROD01);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		/* End PBXGroup section */
+
+		/* Begin PBXNativeTarget section */
+		AATARGET /* DevLab */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AABUILDCFG;
+			buildPhases = (AASOURCES);
+			buildRules = ();
+			dependencies = ();
+			name = DevLab;
+			productName = DevLab;
+			productReference = AAPROD01;
+			productType = "com.apple.product-type.application";
+		};
+		/* End PBXNativeTarget section */
+
+		/* Begin PBXProject section */
+		AAPROJECT /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1500;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = { AATARGET = { CreatedOnToolsVersion = 15.0; }; };
+			};
+			buildConfigurationList = AAPROJECTCFG;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (en, Base);
+			mainGroup = AAGROUP0;
+			productRefGroup = AAPROD00;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (AATARGET);
+		};
+		/* End PBXProject section */
+
+		/* Begin PBXSourcesBuildPhase section */
+		AASOURCES /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (AA000001, AA000002, AA000003, AA000004, AA000005, AA000006, AA000007, AA000008, AA000009, AA000010, AA000011, AA000012, AA000015);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		/* End PBXSourcesBuildPhase section */
+
+		/* Begin XCBuildConfiguration section */
+		AADEBUG /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.devlab.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "DevLab/DevLab-Bridging-Header.h";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		AARELEASE /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.devlab.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "DevLab/DevLab-Bridging-Header.h";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		AAPROJDEBUG /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = { ALWAYS_SEARCH_USER_PATHS = NO; };
+			name = Debug;
+		};
+		AAPROJRELEASE /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = { ALWAYS_SEARCH_USER_PATHS = NO; };
+			name = Release;
+		};
+		/* End XCBuildConfiguration section */
+
+		/* Begin XCConfigurationList section */
+		AABUILDCFG /* Build configuration list for PBXNativeTarget "DevLab" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (AADEBUG, AARELEASE);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		AAPROJECTCFG /* Build configuration list for PBXProject "DevLab" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (AAPROJDEBUG, AAPROJRELEASE);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		/* End XCConfigurationList section */
+	};
+	rootObject = AAPROJECT /* Project object */;
+}

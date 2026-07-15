@@ -1,0 +1,182 @@
+{
+  "name": "devlab",
+  "version": "1.0.0",
+  "description": "Autonomous AI coding agent — multi-provider support for Groq, Claude, free models, Copilot alias fallback, and automation testing",
+  "type": "module",
+  "main": "electron/main.js",
+  "bin": {
+    "devlab": "./index.js"
+  },
+  "scripts": {
+    "start": "node index.js chat",
+    "chat": "node index.js chat",
+    "learn": "node index.js learn",
+    "scan": "node index.js scan",
+    "voice": "node index.js voice",
+    "memory": "node index.js memory",
+    "ci": "node index.js ci .",
+    "develop": "node index.js develop",
+    "ui": "node index.js ui .",
+    "electron": "electron .",
+    "electron:dev": "NODE_ENV=development electron .",
+    "build:mac": "electron-builder --mac",
+    "build:win": "electron-builder --win",
+    "build:linux": "electron-builder --linux",
+    "build:all": "electron-builder --mac --win --linux",
+    "build:cli:mac": "node scripts/build-cli.mjs --target mac",
+    "build:cli:win": "node scripts/build-cli.mjs --target win",
+    "build:cli:linux": "node scripts/build-cli.mjs --target linux",
+    "build:cli:all": "node scripts/build-cli.mjs --target all",
+    "build:release": "npm run build:cli:all && npm run build:all",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint src test index.js",
+    "train": "node scripts/export-training-data.mjs . --with-history && python3 scripts/finetune-qlora.py --data train.jsonl",
+    "train:data": "node scripts/export-training-data.mjs . --with-history --out train.jsonl",
+    "train:deploy": "bash scripts/train-and-deploy.sh"
+  },
+  "dependencies": {
+    "chalk": "^5.3.0",
+    "commander": "^12.1.0",
+    "diff": "^7.0.0",
+    "dotenv": "^16.4.5",
+    "express": "^4.22.2",
+    "form-data": "^4.0.1",
+    "glob": "^11.0.0",
+    "groq-sdk": "^0.10.0",
+    "marked": "^13.0.0",
+    "marked-terminal": "^7.1.0",
+    "ora": "^8.1.0",
+    "simple-git": "^3.27.0",
+    "ws": "^8.21.0",
+    "yaml": "^2.4.5"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@yao-pkg/pkg": "^6.21.0",
+    "electron": "^43.0.0",
+    "electron-builder": "^26.15.3",
+    "eslint": "^10.6.0",
+    "vitest": "^4.1.10"
+  },
+  "build": {
+    "appId": "com.devlab.app",
+    "productName": "DevLab",
+    "copyright": "Copyright © 2024",
+    "asar": true,
+    "files": [
+      "electron/**/*",
+      "ui/**/*",
+      "src/**/*",
+      "index.js",
+      "package.json",
+      ".env",
+      "node_modules/**/*",
+      "!node_modules/.cache/**/*",
+      "!**/*.map"
+    ],
+    "extraResources": [
+      {
+        "from": ".env.example",
+        "to": ".env.example",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
+    "mac": {
+      "category": "public.app-category.developer-tools",
+      "icon": "electron/assets/icon.icns",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ],
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "electron/entitlements.mac.plist",
+      "entitlementsInherit": "electron/entitlements.mac.plist"
+    },
+    "win": {
+      "icon": "electron/assets/icon.ico",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64",
+            "ia32"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "linux": {
+      "icon": "electron/assets/icon.png",
+      "target": [
+        "AppImage",
+        "deb",
+        "rpm"
+      ],
+      "category": "Development"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "DevLab"
+    },
+    "dmg": {
+      "title": "DevLab",
+      "background": null,
+      "window": {
+        "width": 540,
+        "height": 380
+      }
+    },
+    "directories": {
+      "buildResources": "electron/assets",
+      "output": "dist"
+    }
+  },
+  "engines": {
+    "node": ">=22.5.0"
+  },
+  "pkg": {
+    "scripts": [
+      "src/**/*.js",
+      "ui/**/*.js"
+    ],
+    "assets": [
+      "ui/public/**/*",
+      ".env.example",
+      "mcp-servers.example.json"
+    ],
+    "targets": [
+      "node20-macos-arm64",
+      "node20-macos-x64",
+      "node20-win-x64",
+      "node20-linux-x64"
+    ],
+    "outputPath": "dist/cli"
+  },
+  "notes": {
+    "sqlite": "Uses built-in node:sqlite module (Node 22.5+). No native addons needed."
+  }
+}

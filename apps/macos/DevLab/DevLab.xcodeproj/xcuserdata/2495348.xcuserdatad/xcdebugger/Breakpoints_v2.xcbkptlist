@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Bucket
+   uuid = "461D440B-8095-4B63-BF86-DBAC8BB0E78D"
+   type = "1"
+   version = "2.0">
+   <Breakpoints>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "BDE03A13-651D-4547-9FC2-6041D715B63D"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "DevLab/EditorView.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "125"
+            endingLineNumber = "125"
+            landmarkName = "CodeEditorView"
+            landmarkType = "14">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "16FC15AF-7A18-45FE-89E7-7E1B694BDD87"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "DevLab/EditorView.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "13"
+            endingLineNumber = "13"
+            landmarkName = "body"
+            landmarkType = "24">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "299006E6-8F8D-4061-AC76-5858ED4CDB62"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "DevLab/EditorView.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "207"
+            endingLineNumber = "207"
+            landmarkName = "updateNSView(_:context:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "21882AFE-F091-4224-9690-02B568C21185"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "DevLab/EditorView.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "215"
+            endingLineNumber = "215"
+            landmarkName = "updateNSView(_:context:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "CF919E1D-BC28-47C3-9DEB-BE89BEFD4D14"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "DevLab/EditorView.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "214"
+            endingLineNumber = "214"
+            landmarkName = "updateNSView(_:context:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "2CA1C723-19F4-4CE1-B979-29E0571D2112"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "DevLab/EditorView.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "247"
+            endingLineNumber = "247"
+            landmarkName = "applyThemeAndContent(_:content:language:replaceContent:)"
+            landmarkType = "7">
+            <Locations>
+               <Location
+                  uuid = "2CA1C723-19F4-4CE1-B979-29E0571D2112 - f09ddf00591e28d7"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "DevLab.CodeEditorView.makeNSView(context: SwiftUI.NSViewRepresentableContext&lt;DevLab.CodeEditorView&gt;) -&gt; __C.NSScrollView"
+                  moduleName = "DevLab"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/2495348/Agent/apps/macos/DevLab/DevLab/EditorView.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "247"
+                  endingLineNumber = "247">
+               </Location>
+               <Location
+                  uuid = "2CA1C723-19F4-4CE1-B979-29E0571D2112 - 2f406bce5e9de49f"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "(5) suspend resume partial function for closure #1 () async -&gt; () in DevLab.CodeEditorView.makeNSView(context: SwiftUI.NSViewRepresentableContext&lt;DevLab.CodeEditorView&gt;) -&gt; __C.NSScrollView"
+                  moduleName = "DevLab"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/2495348/Agent/apps/macos/DevLab/DevLab/EditorView.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "247"
+                  endingLineNumber = "247">
+               </Location>
+               <Location
+                  uuid = "2CA1C723-19F4-4CE1-B979-29E0571D2112 - 9730e440b0a3c4e8"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "DevLab.CodeEditorView.updateNSView(_: __C.NSScrollView, context: SwiftUI.NSViewRepresentableContext&lt;DevLab.CodeEditorView&gt;) -&gt; ()"
+                  moduleName = "DevLab"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/2495348/Agent/apps/macos/DevLab/DevLab/EditorView.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "247"
+                  endingLineNumber = "247">
+               </Location>
+               <Location
+                  uuid = "2CA1C723-19F4-4CE1-B979-29E0571D2112 - 9730e440b0a3c4e8"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "DevLab.CodeEditorView.updateNSView(_: __C.NSScrollView, context: SwiftUI.NSViewRepresentableContext&lt;DevLab.CodeEditorView&gt;) -&gt; ()"
+                  moduleName = "DevLab"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/2495348/Agent/apps/macos/DevLab/DevLab/EditorView.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "247"
+                  endingLineNumber = "247">
+               </Location>
+               <Location
+                  uuid = "2CA1C723-19F4-4CE1-B979-29E0571D2112 - 377d35fbd9ac9000"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "(5) suspend resume partial function for closure #1 () async -&gt; () in DevLab.CodeEditorView.updateNSView(_: __C.NSScrollView, context: SwiftUI.NSViewRepresentableContext&lt;DevLab.CodeEditorView&gt;) -&gt; ()"
+                  moduleName = "DevLab"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/2495348/Agent/apps/macos/DevLab/DevLab/EditorView.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "247"
+                  endingLineNumber = "247">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+   </Breakpoints>
+</Bucket>

@@ -1,0 +1,261 @@
+{
+  "title": "Project Evaluation Rubric",
+  "type": "project",
+  "stack": {
+    "languages": [
+      "javascript"
+    ],
+    "frameworks": [
+      "express"
+    ],
+    "mobile": false,
+    "hasTests": false,
+    "hasCI": true,
+    "hasDocs": true
+  },
+  "generatedAt": "2026-07-08T17:15:38.119Z",
+  "scoring": {
+    "scale": "1-4 per criterion, weighted",
+    "maxScore": 4,
+    "passingScore": 2.8,
+    "formula": "sum(points * weight) / sum(weights)"
+  },
+  "totalWeight": 100,
+  "criteria": [
+    {
+      "id": "code-quality",
+      "name": "Code Quality",
+      "weight": 20,
+      "description": "Readability, naming, structure, idiomatic use of the language/framework",
+      "checks": [
+        "Consistent naming and formatting",
+        "No dead/duplicated code",
+        "Functions small and single-purpose",
+        "Linting passes clean"
+      ],
+      "levels": [
+        {
+          "level": "excellent",
+          "points": 4,
+          "description": "Exceeds expectations; exemplary, no issues found"
+        },
+        {
+          "level": "good",
+          "points": 3,
+          "description": "Meets expectations; minor improvements possible"
+        },
+        {
+          "level": "fair",
+          "points": 2,
+          "description": "Partially meets expectations; notable gaps"
+        },
+        {
+          "level": "poor",
+          "points": 1,
+          "description": "Does not meet expectations; must be addressed"
+        }
+      ]
+    },
+    {
+      "id": "architecture",
+      "name": "Architecture & Design",
+      "weight": 20,
+      "description": "Separation of concerns, dependency direction, framework conventions followed",
+      "checks": [
+        "Clear module boundaries",
+        "Dependency injection where appropriate",
+        "No circular dependencies",
+        "Follows framework conventions"
+      ],
+      "levels": [
+        {
+          "level": "excellent",
+          "points": 4,
+          "description": "Exceeds expectations; exemplary, no issues found"
+        },
+        {
+          "level": "good",
+          "points": 3,
+          "description": "Meets expectations; minor improvements possible"
+        },
+        {
+          "level": "fair",
+          "points": 2,
+          "description": "Partially meets expectations; notable gaps"
+        },
+        {
+          "level": "poor",
+          "points": 1,
+          "description": "Does not meet expectations; must be addressed"
+        }
+      ]
+    },
+    {
+      "id": "testing",
+      "name": "Testing",
+      "weight": 20,
+      "description": "Coverage, quality, and reliability of automated tests",
+      "checks": [
+        "Unit tests for core logic",
+        "Integration tests for critical flows",
+        "Tests run in CI",
+        "Edge cases covered"
+      ],
+      "levels": [
+        {
+          "level": "excellent",
+          "points": 4,
+          "description": "Exceeds expectations; exemplary, no issues found"
+        },
+        {
+          "level": "good",
+          "points": 3,
+          "description": "Meets expectations; minor improvements possible"
+        },
+        {
+          "level": "fair",
+          "points": 2,
+          "description": "Partially meets expectations; notable gaps"
+        },
+        {
+          "level": "poor",
+          "points": 1,
+          "description": "Does not meet expectations; must be addressed"
+        }
+      ]
+    },
+    {
+      "id": "security",
+      "name": "Security",
+      "weight": 15,
+      "description": "No secrets in code, input validation, safe dependency usage",
+      "checks": [
+        "No hardcoded credentials",
+        "Inputs validated/sanitized",
+        "Dependencies free of known CVEs",
+        "Sensitive data handled correctly"
+      ],
+      "levels": [
+        {
+          "level": "excellent",
+          "points": 4,
+          "description": "Exceeds expectations; exemplary, no issues found"
+        },
+        {
+          "level": "good",
+          "points": 3,
+          "description": "Meets expectations; minor improvements possible"
+        },
+        {
+          "level": "fair",
+          "points": 2,
+          "description": "Partially meets expectations; notable gaps"
+        },
+        {
+          "level": "poor",
+          "points": 1,
+          "description": "Does not meet expectations; must be addressed"
+        }
+      ]
+    },
+    {
+      "id": "documentation",
+      "name": "Documentation",
+      "weight": 10,
+      "description": "README, API docs, inline comments where needed",
+      "checks": [
+        "README with setup instructions",
+        "Public APIs documented",
+        "Architecture decisions recorded"
+      ],
+      "levels": [
+        {
+          "level": "excellent",
+          "points": 4,
+          "description": "Exceeds expectations; exemplary, no issues found"
+        },
+        {
+          "level": "good",
+          "points": 3,
+          "description": "Meets expectations; minor improvements possible"
+        },
+        {
+          "level": "fair",
+          "points": 2,
+          "description": "Partially meets expectations; notable gaps"
+        },
+        {
+          "level": "poor",
+          "points": 1,
+          "description": "Does not meet expectations; must be addressed"
+        }
+      ]
+    },
+    {
+      "id": "ci-cd",
+      "name": "CI/CD & Tooling",
+      "weight": 10,
+      "description": "Automated builds, tests, and release processes",
+      "checks": [
+        "CI pipeline builds and tests every change",
+        "Reproducible builds",
+        "Automated release/versioning"
+      ],
+      "levels": [
+        {
+          "level": "excellent",
+          "points": 4,
+          "description": "Exceeds expectations; exemplary, no issues found"
+        },
+        {
+          "level": "good",
+          "points": 3,
+          "description": "Meets expectations; minor improvements possible"
+        },
+        {
+          "level": "fair",
+          "points": 2,
+          "description": "Partially meets expectations; notable gaps"
+        },
+        {
+          "level": "poor",
+          "points": 1,
+          "description": "Does not meet expectations; must be addressed"
+        }
+      ]
+    },
+    {
+      "id": "performance",
+      "name": "Performance",
+      "weight": 5,
+      "description": "Efficient algorithms, no obvious bottlenecks, resource usage",
+      "checks": [
+        "No N+1 or unbounded loops on hot paths",
+        "Async/non-blocking where appropriate",
+        "Reasonable bundle/binary size"
+      ],
+      "levels": [
+        {
+          "level": "excellent",
+          "points": 4,
+          "description": "Exceeds expectations; exemplary, no issues found"
+        },
+        {
+          "level": "good",
+          "points": 3,
+          "description": "Meets expectations; minor improvements possible"
+        },
+        {
+          "level": "fair",
+          "points": 2,
+          "description": "Partially meets expectations; notable gaps"
+        },
+        {
+          "level": "poor",
+          "points": 1,
+          "description": "Does not meet expectations; must be addressed"
+        }
+      ]
+    }
+  ]
+}

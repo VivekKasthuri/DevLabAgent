@@ -1,0 +1,46 @@
+name: code-review
+description: Automated code review workflow — security scan, tests check, git diff analysis
+version: "1.0"
+
+steps:
+  - name: Get git diff
+    type: tool
+    name: git_diff
+    args:
+      path: "{{project_path}}"
+      staged: false
+    save_as: diff_result
+
+  - name: Security scan
+    type: tool
+    name: scan_security
+    args:
+      path: "{{project_path}}"
+      projectLevel: "true"
+    save_as: security_result
+
+  - name: Review changes
+    type: agent
+    prompt: |
+      Review the following code changes for quality, correctness, and security issues.
+      
+      Git diff:
+      {{diff_result}}
+      
+      Security scan:
+      {{security_result}}
+      
+      Provide:
+      1. Summary of changes
+      2. Potential bugs or issues
+      3. Security concerns
+      4. Suggested improvements
+      5. Overall verdict (LGTM / Needs Changes / Reject)
+
+  - name: Save review
+    type: tool
+    name: remember
+    args:
+      key: "code-review-{{project_path}}"
+      value: "Last review completed. Check output above."
+      tags: ["code-review", "{{project_path}}"]

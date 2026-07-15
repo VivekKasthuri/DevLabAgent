@@ -1,0 +1,30 @@
+{
+  "$comment": "DevLab design tokens — single source of truth for web (ui/public/style.css :root), macOS (apps/macos/DevLab/DevLab/Models.swift Color extension), and Windows (apps/windows/DevLab/DevLab/App.xaml brushes). Update all three together.",
+  "color": {
+    "bg":         "#0f0f0f",
+    "bg2":        "#161616",
+    "bg3":        "#1c1c1c",
+    "bg4":        "#242424",
+    "bgHover":    "#2a2a2a",
+    "border":     "#2e2e2e",
+    "text":       "#d4d4d4",
+    "textDim":    "#6b6b6b",
+    "textMuted":  "#9a9a9a",
+    "accent":     "#a78bfa",
+    "accentDim":  "#7c5cbf",
+    "accentGlow": "rgba(167,139,250,0.15)",
+    "green":      "#4ade80",
+    "red":        "#f87171",
+    "yellow":     "#fbbf24",
+    "blue":       "#60a5fa",
+    "orange":     "#fb923c"
+  },
+  "font": {
+    "ui":   "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+    "mono": "'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace"
+  },
+  "metric": {
+    "radius": 6,
+    "topbarHeight": 42
+  }
+}

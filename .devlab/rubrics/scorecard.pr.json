@@ -1,0 +1,69 @@
+{
+  "rubricTitle": "PR Review Rubric",
+  "type": "pr",
+  "scoredAt": "2026-07-13T16:07:11.573Z",
+  "weightedScore": 2.8,
+  "passingScore": 3,
+  "verdict": "fail",
+  "scores": {
+    "correctness": {
+      "name": "Correctness",
+      "weight": 30,
+      "points": 3,
+      "level": "good",
+      "evidence": [
+        "automated correctness limited — run build/tests to confirm; review logic manually"
+      ]
+    },
+    "tests": {
+      "name": "Test Coverage",
+      "weight": 20,
+      "points": 2,
+      "level": "fair",
+      "evidence": [
+        "no diff available"
+      ]
+    },
+    "code-quality": {
+      "name": "Code Quality",
+      "weight": 20,
+      "points": 3,
+      "level": "good",
+      "evidence": [
+        "no debug statements added"
+      ]
+    },
+    "security": {
+      "name": "Security",
+      "weight": 15,
+      "points": 4,
+      "level": "excellent",
+      "evidence": [
+        "no secrets detected in diff"
+      ]
+    },
+    "docs": {
+      "name": "Documentation",
+      "weight": 10,
+      "points": 2,
+      "level": "fair",
+      "evidence": [
+        "no doc changes (fine if behavior unchanged)"
+      ]
+    },
+    "scope": {
+      "name": "Scope Discipline",
+      "weight": 5,
+      "points": 2,
+      "level": "fair",
+      "evidence": [
+        "no diff"
+      ]
+    }
+  },
+  "actionItems": [
+    "Test Coverage (2/4): no diff available",
+    "Documentation (2/4): no doc changes (fine if behavior unchanged)",
+    "Scope Discipline (2/4): no diff"
+  ]
+}

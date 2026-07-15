@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>DevLab — Error</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0f0f0f; color: #d4d4d4;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      height: 100vh; gap: 16px; text-align: center; padding: 32px;
+      -webkit-app-region: drag;
+    }
+    h1 { font-size: 20px; color: #f87171; }
+    p  { font-size: 13px; color: #9a9a9a; max-width: 400px; line-height: 1.6; }
+    button {
+      background: #a78bfa; border: none; color: white;
+      padding: 8px 20px; border-radius: 6px; cursor: pointer;
+      font-size: 13px; -webkit-app-region: no-drag;
+    }
+    button:hover { background: #7c5cbf; }
+  </style>
+</head>
+<body>
+  <div style="font-size:40px">⚠️</div>
+  <h1>Failed to start DevLab</h1>
+  <p>The agent server could not be started. Check that Node.js is installed and your .env file has a valid API key.</p>
+  <button onclick="location.reload()">Retry</button>
+</body>
+</html>

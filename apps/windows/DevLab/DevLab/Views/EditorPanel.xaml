@@ -1,0 +1,52 @@
+<UserControl x:Class="DevLab.Views.EditorPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="{StaticResource BgBrush}">
+  <Grid>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="36"/>
+      <RowDefinition Height="*"/>
+    </Grid.RowDefinitions>
+
+    <!-- Tab bar -->
+    <Border Grid.Row="0" Background="{StaticResource Bg2Brush}"
+            BorderBrush="{StaticResource BorderBrush2}" BorderThickness="0,0,0,1">
+      <Grid>
+        <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+          <StackPanel x:Name="TabBar" Orientation="Horizontal"/>
+        </ScrollViewer>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,8,0">
+          <Button Content="💾" Style="{StaticResource IconButton}" Click="OnSave"
+                  ToolTip="Save (Ctrl+S)" Margin="0,0,4,0"/>
+        </StackPanel>
+      </Grid>
+    </Border>
+
+    <!-- Editor -->
+    <Grid Grid.Row="1">
+      <TextBox x:Name="EditorBox"
+               Background="{StaticResource BgBrush}"
+               Foreground="{DynamicResource TextBrush}"
+               CaretBrush="{StaticResource AccentBrush}"
+               FontFamily="Cascadia Code, JetBrains Mono, Consolas"
+               FontSize="13"
+               AcceptsReturn="True" AcceptsTab="True"
+               HorizontalScrollBarVisibility="Auto"
+               VerticalScrollBarVisibility="Auto"
+               BorderThickness="0" Padding="12"
+               TextWrapping="NoWrap"
+               SpellCheck.IsEnabled="False"
+               TextChanged="OnTextChanged"
+               KeyDown="OnKeyDown"/>
+
+      <!-- Empty state -->
+      <StackPanel x:Name="EmptyState" VerticalAlignment="Center" HorizontalAlignment="Center">
+        <TextBlock Text="💻" FontSize="52" HorizontalAlignment="Center" Opacity="0.3"/>
+        <TextBlock Text="Open a file from the explorer" FontSize="14"
+                   Foreground="{DynamicResource TextDimBrush}" HorizontalAlignment="Center" Margin="0,12,0,4"/>
+        <TextBlock Text="or ask the AI to create one" FontSize="12"
+                   Foreground="{DynamicResource TextDimBrush}" Opacity="0.6" HorizontalAlignment="Center"/>
+      </StackPanel>
+    </Grid>
+  </Grid>
+</UserControl>

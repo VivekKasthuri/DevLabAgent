@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DevLab</title>
+  <link rel="stylesheet" href="style.css" />
+  <!-- Monaco Editor CDN -->
+  <script>var require = { paths: { vs: 'https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs' } };</script>
+  <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/loader.js"></script>
+</head>
+<body>
+  <!-- ── Top Bar ─────────────────────────────────────────────────────────── -->
+  <header id="topbar">
+    <div class="topbar-left">
+      <div class="logo">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 2L2 7l10 5 10-5-10-5zm0 7L2 14l10 5 10-5-10-5zm0 7L2 21l10 5 10-5-10-5z" stroke="#a78bfa" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span class="logo-text">DevLab</span>
+      </div>
+      <div class="topbar-project" id="project-name">Loading…</div>
+    </div>
+    <div class="topbar-center">
+      <div class="breadcrumb" id="breadcrumb">No file open</div>
+    </div>
+    <div class="topbar-right">
+      <button class="tb-btn" id="btn-run" title="Run project">▶ Run</button>
+      <button class="tb-btn" id="btn-git" title="Git status">⎇ Git</button>
+      <button class="tb-btn" onclick="window.open('/dashboard.html','_blank')" title="Usage &amp; quality dashboard">📊 Dashboard</button>
+      <div class="separator"></div>
+      <div class="devlab-mode-wrap">
+        <span class="devlab-coder-badge">DevLab Coder</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── Main layout ────────────────────────────────────────────────────────── -->
+  <div id="main">
+    <!-- Sidebar -->
+    <aside id="sidebar">
+      <div class="sidebar-header">
+        <span>EXPLORER</span>
+        <div class="sidebar-actions">
+          <button class="icon-btn" id="btn-new-file" title="New file">+</button>
+          <button class="icon-btn" id="btn-refresh-tree" title="Refresh">↻</button>
+        </div>
+      </div>
+      <div id="file-tree"></div>
+    </aside>
+
+    <!-- Resize handle -->
+    <div class="resize-handle" id="resize-sidebar"></div>
+
+    <!-- Editor area -->
+    <section id="editor-area">
+      <!-- Tab bar -->
+      <div id="tab-bar">
+        <div id="tabs"></div>
+        <div id="editor-actions">
+          <button class="icon-btn" id="btn-save" title="Save (Ctrl+S)">💾</button>
+          <button class="icon-btn" id="btn-format" title="Format">⌥F</button>
+        </div>
+      </div>
+      <!-- Monaco mount point -->
+      <div id="editor-mount"></div>
+      <!-- Terminal -->
+      <div id="terminal-strip" class="collapsed">
+        <div id="terminal-header">
+          <span>TERMINAL / OUTPUT</span>
+          <div style="display:flex;gap:6px">
+            <button class="icon-btn" id="btn-clear-term">⌧</button>
+            <button class="icon-btn" id="btn-toggle-term">⌄</button>
+          </div>
+        </div>
+        <div id="terminal-body"></div>
+      </div>
+    </section>
+
+    <!-- Resize handle -->
+    <div class="resize-handle horizontal" id="resize-chat"></div>
+
+    <!-- Chat panel -->
+    <aside id="chat-panel">
+      <div class="chat-header">
+        <span>AI CHAT</span>
+        <div style="display:flex;gap:6px;align-items:center">
+          <button class="icon-btn" id="btn-new-chat" title="New session">✦ New</button>
+          <button class="icon-btn" id="btn-clear-chat" title="Clear context">⌧</button>
+        </div>
+      </div>
+      <div id="chat-messages"></div>
+      <div id="chat-footer">
+        <div id="chat-input-wrap">
+          <textarea id="chat-input" placeholder="Ask anything about your code…" rows="3"></textarea>
+          <button id="btn-send" title="Send">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+          </button>
+        </div>
+        <div id="chat-status"></div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- ── Context menu ───────────────────────────────────────────────────────── -->
+  <div id="ctx-menu" class="hidden">
+    <div class="ctx-item" data-action="open">Open</div>
+    <div class="ctx-item" data-action="copy-path">Copy path</div>
+    <div class="ctx-separator"></div>
+    <div class="ctx-item" data-action="delete">Delete</div>
+  </div>
+
+  <!-- ── Notifications ──────────────────────────────────────────────────────── -->
+  <div id="notifications"></div>
+
+  <!-- ── Command palette (⌘K) ───────────────────────────────────────────────── -->
+  <div id="palette-overlay" style="display:none">
+    <div id="palette">
+      <input id="palette-input" type="text" placeholder="Type a command or file name…  (Esc to close)" autocomplete="off" spellcheck="false"/>
+      <div id="palette-list"></div>
+    </div>
+  </div>
+
+  <!-- ── App JS ─────────────────────────────────────────────────────────────── -->
+  <script src="app.js"></script>
+</body>
+</html>

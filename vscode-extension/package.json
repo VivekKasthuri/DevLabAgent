@@ -1,0 +1,61 @@
+{
+  "name": "devlab-tab",
+  "displayName": "DevLab Tab Complete",
+  "description": "Cursor-style inline AI code completions powered by your local DevLab agent (Groq / Claude / Ollama).",
+  "version": "0.1.0",
+  "publisher": "devlab",
+  "engines": { "vscode": "^1.85.0" },
+  "categories": ["Programming Languages", "Machine Learning"],
+  "activationEvents": ["onStartupFinished"],
+  "main": "./extension.js",
+  "contributes": {
+    "commands": [
+      { "command": "devlab.toggleCompletions", "title": "DevLab: Toggle Tab Completions" },
+      { "command": "devlab.fixSelection", "title": "DevLab: Fix Selection" },
+      { "command": "devlab.refactorSelection", "title": "DevLab: Refactor Selection" },
+      { "command": "devlab.explainSelection", "title": "DevLab: Explain Selection" }
+    ],
+    "keybindings": [
+      { "command": "devlab.fixSelection", "key": "ctrl+shift+d f", "mac": "cmd+shift+d f", "when": "editorHasSelection" },
+      { "command": "devlab.explainSelection", "key": "ctrl+shift+d e", "mac": "cmd+shift+d e", "when": "editorHasSelection" }
+    ],
+    "configuration": {
+      "title": "DevLab Tab Complete",
+      "properties": {
+        "devlab.endpoint": {
+          "type": "string",
+          "default": "http://localhost:4321",
+          "description": "URL of the running DevLab UI server (devlab ui)"
+        },
+        "devlab.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable inline completions"
+        },
+        "devlab.debounceMs": {
+          "type": "number",
+          "default": 300,
+          "description": "Delay after typing stops before requesting a completion"
+        },
+        "devlab.useIndex": {
+          "type": "boolean",
+          "default": true,
+          "description": "Include semantic-index context from the project in completion requests"
+        },
+        "devlab.provider": {
+          "type": "string",
+          "default": "",
+          "description": "Override LLM provider (groq/claude/ollama). Empty = DevLab default"
+        },
+        "devlab.apiKey": {
+          "type": "string",
+          "default": "",
+          "description": "Bearer token if the DevLab server has DEVLAB_API_KEY set"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "package": "npx @vscode/vsce package"
+  }
+}
