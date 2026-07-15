@@ -19,6 +19,7 @@
 		AA000011 /* AuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100013; };
 		AA000012 /* AuthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100014; };
 		AA000015 /* ServerSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100015; };
+		AA000016 /* VoiceInputService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100016; };
 		/* End PBXBuildFile section */
 
 		/* Begin PBXFileReference section */
@@ -37,6 +38,7 @@
 		AA100013 /* AuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthService.swift; sourceTree = "<group>"; };
 		AA100014 /* AuthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthView.swift; sourceTree = "<group>"; };
 		AA100015 /* ServerSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerSettingsView.swift; sourceTree = "<group>"; };
+		AA100016 /* VoiceInputService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceInputService.swift; sourceTree = "<group>"; };
 		AAPROD01 /* DevLab.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DevLab.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		/* End PBXFileReference section */
 
@@ -48,7 +50,7 @@
 		};
 		AAGROUP1 /* DevLab */ = {
 			isa = PBXGroup;
-			children = (AA100001, AA100002, AA100003, AA100004, AA100005, AA100006, AA100007, AA100008, AA100009, AA100010, AA100011, AA100012, AA100013, AA100014, AA100015);
+			children = (AA100001, AA100002, AA100003, AA100004, AA100005, AA100006, AA100007, AA100008, AA100009, AA100010, AA100011, AA100012, AA100013, AA100014, AA100015, AA100016);
 			path = DevLab;
 			sourceTree = "<group>";
 		};
@@ -100,7 +102,7 @@
 		AASOURCES /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
-			files = (AA000001, AA000002, AA000003, AA000004, AA000005, AA000006, AA000007, AA000008, AA000009, AA000010, AA000011, AA000012, AA000015);
+			files = (AA000001, AA000002, AA000003, AA000004, AA000005, AA000006, AA000007, AA000008, AA000009, AA000010, AA000011, AA000012, AA000015, AA000016);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		/* End PBXSourcesBuildPhase section */
@@ -116,7 +118,9 @@
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "DevLab uses the microphone for voice input in chat.";
 				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "DevLab converts spoken prompts into chat input.";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 1.0;
@@ -137,7 +141,9 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "DevLab uses the microphone for voice input in chat.";
 				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "DevLab converts spoken prompts into chat input.";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 1.0;

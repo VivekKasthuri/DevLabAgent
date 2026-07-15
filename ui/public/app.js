@@ -16,6 +16,10 @@ const State = {
   streaming: false,
   providers: [],
   currentCtxTarget: null,
+  voiceRecognition: null,
+  voiceListening: false,
+  voiceSupported: false,
+  voiceBaseText: '',
 };
 
 // ── Monaco ────────────────────────────────────────────────────────────────────
@@ -85,6 +89,7 @@ require(['vs/editor/editor.main'], () => {
 async function init() {
   await loadProjectInfo();
   await loadDevLabModes();
+  initVoiceInput();
   connectWS();
   loadFileTree();
   bindEvents();
@@ -205,6 +210,94 @@ function sendChat() {
     provider: State.provider,
     model: State.model,
   }));
+}
+
+function initVoiceInput() {
+  const VoiceRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const voiceBtn = document.getElementById('btn-voice');
+  if (!voiceBtn) return;
+
+  if (!VoiceRecognition) {
+    State.voiceSupported = false;
+    voiceBtn.disabled = true;
+    voiceBtn.title = 'Voice input is not supported in this browser';
+    return;
+  }
+
+  State.voiceSupported = true;
+  const recognition = new VoiceRecognition();
+  recognition.continuous = false;
+  recognition.interimResults = true;
+  recognition.lang = navigator.language || 'en-US';
+
+  recognition.addEventListener('start', () => {
+    State.voiceListening = true;
+    updateVoiceButton();
+    setStatus('Listening… speak your prompt');
+  });
+
+  recognition.addEventListener('result', (event) => {
+    const input = document.getElementById('chat-input');
+    const spokenText = Array.from(event.results)
+      .map(result => result[0]?.transcript || '')
+      .join(' ')
+      .trim();
+
+    input.value = joinPromptText(State.voiceBaseText, spokenText);
+    autoResize(input);
+  });
+
+  recognition.addEventListener('end', () => {
+    const input = document.getElementById('chat-input');
+    State.voiceListening = false;
+    State.voiceBaseText = input.value.trim();
+    updateVoiceButton();
+    setStatus(input.value.trim() ? 'Voice input captured — review and send' : 'Ready');
+    input.focus();
+  });
+
+  recognition.addEventListener('error', (event) => {
+    State.voiceListening = false;
+    updateVoiceButton();
+    const message = event.error === 'not-allowed'
+      ? 'Microphone access was blocked'
+      : `Voice input error: ${event.error}`;
+    setStatus(message);
+  });
+
+  State.voiceRecognition = recognition;
+  updateVoiceButton();
+}
+
+function toggleVoiceInput() {
+  if (!State.voiceRecognition || State.thinking) return;
+
+  if (State.voiceListening) {
+    State.voiceRecognition.stop();
+    return;
+  }
+
+  const input = document.getElementById('chat-input');
+  State.voiceBaseText = input.value.trim();
+  try {
+    State.voiceRecognition.start();
+  } catch (error) {
+    setStatus(`Voice input error: ${error.message}`);
+  }
+}
+
+function updateVoiceButton() {
+  const voiceBtn = document.getElementById('btn-voice');
+  if (!voiceBtn) return;
+
+  voiceBtn.disabled = !State.voiceSupported || State.thinking;
+  voiceBtn.classList.toggle('listening', State.voiceListening);
+  voiceBtn.title = State.voiceListening ? 'Stop voice input' : 'Start voice input';
+  voiceBtn.setAttribute('aria-pressed', String(State.voiceListening));
+}
+
+function joinPromptText(baseText, spokenText) {
+  return [baseText, spokenText].filter(Boolean).join(baseText && spokenText ? ' ' : '').trim();
 }
 
 function appendUserMessage(text) {
@@ -452,8 +545,6 @@ async function loadDevLabModes() {
   State.model = null;
   State.provider = 'ollama';
 }
-      State.provider = 'ollama';
-}
 
 // Keep loadProviders for admin/dashboard use — not shown in main UI
 async function loadProviders() {
@@ -492,6 +583,7 @@ function termLine(text, cls = '') {
 function bindEvents() {
   // Send button + Enter
   document.getElementById('btn-send').addEventListener('click', sendChat);
+  document.getElementById('btn-voice').addEventListener('click', toggleVoiceInput);
   document.getElementById('chat-input').addEventListener('keydown', e => {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat(); }
   });
@@ -578,6 +670,7 @@ function setBusy(busy) {
     State.requestStartedAt = 0;
   }
   if (!busy) currentAgentMsg = null;
+  updateVoiceButton();
 }
 
 function finishAgentMessage() {

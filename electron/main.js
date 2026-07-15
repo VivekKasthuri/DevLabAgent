@@ -1,6 +1,6 @@
 // electron/main.js — Electron main process for DevLab desktop app
 // Uses CommonJS (Electron's native module system)
-const { app, BrowserWindow, Menu, shell, ipcMain, dialog, Tray, nativeImage } = require('electron');
+const { app, BrowserWindow, Menu, shell, ipcMain, dialog, Tray, nativeImage, session } = require('electron');
 const path = require('path');
 const { createServer } = require('http');
 const { spawn } = require('child_process');
@@ -15,6 +15,20 @@ let mainWindow = null;
 let tray = null;
 let serverProcess = null;
 let serverReady = false;
+
+function allowVoicePermissions() {
+  const ses = session.defaultSession;
+  if (!ses) return;
+
+  ses.setPermissionCheckHandler((_webContents, permission) => (
+    permission === 'media' || permission === 'audioCapture' || permission === 'microphone'
+  ));
+
+  ses.setPermissionRequestHandler((_webContents, permission, callback) => {
+    const allowed = permission === 'media' || permission === 'audioCapture' || permission === 'microphone';
+    callback(allowed);
+  });
+}
 
 // ── Check if port is in use ───────────────────────────────────────────────────
 function isPortFree(port) {
@@ -231,6 +245,7 @@ ipcMain.handle('get-platform', () => process.platform);
 
 // ── App lifecycle ─────────────────────────────────────────────────────────────
 app.whenReady().then(async () => {
+  allowVoicePermissions();
   buildMenu();
   createWindow();
 

@@ -9,6 +9,8 @@ struct ChatView: View {
     @State private var headerDashPhase: CGFloat = 0
     @State private var thinkingStartedAt = Date()
     @State private var thinkingElapsed = 0
+    @State private var voiceInput = VoiceInputService()
+    @State private var voiceBaseText = ""
 
     var body: some View {
         VStack(spacing: 0) {
@@ -131,7 +133,7 @@ struct ChatView: View {
             // Input area
             VStack(spacing: 8) {
                 HStack(alignment: .bottom, spacing: 8) {
-                    TextField("Ask anything about your code…", text: $inputText)
+                    TextField("Ask anything about your code or use voice input…", text: $inputText)
                         .font(.system(size: 13))
                         .foregroundColor(.appText)
                         .textFieldStyle(.plain)
@@ -143,6 +145,15 @@ struct ChatView: View {
                     .background(Color.appSurface2)
                     .cornerRadius(8)
                     .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.appBorder, lineWidth: 1))
+
+                    Button(action: toggleVoiceInput) {
+                        Image(systemName: voiceInput.isListening ? "stop.circle.fill" : "mic.circle")
+                            .font(.system(size: 28))
+                            .foregroundColor(voiceInput.isListening ? .red : .appTextDim)
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(!agentService.isConnected || agentService.isThinking)
+                    .help(voiceInput.isListening ? "Stop voice input" : "Start voice input")
 
                     Button(action: send) {
                         ZStack {
@@ -169,7 +180,16 @@ struct ChatView: View {
                         .font(.system(size: 11))
                         .foregroundColor(.appTextDim)
                     Spacer()
-                    if agentService.isThinking {
+                    if voiceInput.isListening {
+                        Text("Listening… speak your prompt")
+                            .font(.system(size: 11))
+                            .foregroundColor(.red)
+                    } else if let voiceError = voiceInput.lastError {
+                        Text(voiceError)
+                            .font(.system(size: 11))
+                            .foregroundColor(.orange)
+                            .lineLimit(1)
+                    } else if agentService.isThinking {
                         Text("Analyzing… \(thinkingElapsed)s")
                             .font(.system(size: 11))
                             .foregroundColor(.appAccent)
@@ -192,6 +212,9 @@ struct ChatView: View {
                 )
                 .padding(4)
         )
+        .onDisappear {
+            voiceInput.stop()
+        }
     }
 
     var canSend: Bool {
@@ -204,6 +227,21 @@ struct ChatView: View {
         guard canSend else { return }
         agentService.sendMessage(text)
         inputText = ""
+    }
+
+    func toggleVoiceInput() {
+        if voiceInput.isListening {
+            voiceInput.stop()
+            return
+        }
+
+        voiceBaseText = inputText.trimmingCharacters(in: .whitespacesAndNewlines)
+        voiceInput.start { transcript in
+            let spokenText = transcript.trimmingCharacters(in: .whitespacesAndNewlines)
+            inputText = [voiceBaseText, spokenText]
+                .filter { !$0.isEmpty }
+                .joined(separator: voiceBaseText.isEmpty || spokenText.isEmpty ? "" : " ")
+        }
     }
 
     var messageSignature: String {

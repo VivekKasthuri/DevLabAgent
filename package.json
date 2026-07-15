@@ -105,6 +105,10 @@
       ],
       "hardenedRuntime": true,
       "gatekeeperAssess": false,
+      "extendInfo": {
+        "NSMicrophoneUsageDescription": "DevLab uses the microphone for voice input in chat.",
+        "NSSpeechRecognitionUsageDescription": "DevLab converts spoken prompts into chat input."
+      },
       "entitlements": "electron/entitlements.mac.plist",
       "entitlementsInherit": "electron/entitlements.mac.plist"
     },

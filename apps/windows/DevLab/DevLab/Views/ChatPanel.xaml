@@ -50,12 +50,17 @@
           <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*"/>
             <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/>
           </Grid.ColumnDefinitions>
           <TextBox x:Name="InputBox" Grid.Column="0"
                    Style="{StaticResource ChatInput}"
                    MaxHeight="140" MinHeight="38"
-                   KeyDown="OnInputKeyDown"/>
-          <Button Grid.Column="1" Content="➤" Style="{StaticResource SendButton}"
+                   KeyDown="OnInputKeyDown"
+                   ToolTip="Type a prompt or use voice input"/>
+          <Button Grid.Column="1" Content="🎤" Style="{StaticResource SendButton}"
+                  Margin="8,0,0,0" Click="OnVoiceInput" x:Name="VoiceBtn"
+                  VerticalAlignment="Bottom" Width="34" Height="34" FontSize="13"/>
+          <Button Grid.Column="2" Content="➤" Style="{StaticResource SendButton}"
                   Margin="8,0,0,0" Click="OnSend" x:Name="SendBtn"
                   VerticalAlignment="Bottom" Width="34" Height="34" FontSize="14"/>
         </Grid>

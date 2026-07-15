@@ -16,6 +16,7 @@ namespace DevLab.Views
     public partial class ChatPanel : UserControl
     {
         private readonly AgentService _agent = App.AgentService;
+        private readonly VoiceInputService _voiceInput = new();
         private readonly DispatcherTimer _thinkingTimer = new() { Interval = TimeSpan.FromSeconds(1) };
         private DateTime _thinkingStartedAt = DateTime.MinValue;
 
@@ -33,6 +34,23 @@ namespace DevLab.Views
                 ThinkingLabel.Text = $"Thinking… {secs}s";
             };
 
+            _voiceInput.TranscriptReceived += transcript =>
+            {
+                Dispatcher.Invoke(() =>
+                {
+                    var current = InputBox.Text.Trim();
+                    InputBox.Text = string.IsNullOrWhiteSpace(current) ? transcript : $"{current} {transcript}";
+                    InputBox.CaretIndex = InputBox.Text.Length;
+                    InputBox.Focus();
+                });
+            };
+            _voiceInput.StateChanged += () => Dispatcher.Invoke(UpdateVoiceUi);
+            Unloaded += (_, _) =>
+            {
+                _voiceInput.Stop();
+                _voiceInput.Dispose();
+            };
+
             _agent.PropertyChanged += (s, e) =>
             {
                 switch (e.PropertyName)
@@ -43,18 +61,19 @@ namespace DevLab.Views
                             : new SolidColorBrush(Color.FromRgb(0xFB, 0xBF, 0x24));
                         break;
                     case nameof(AgentService.ServerStatus):
-                        StatusLabel.Text = _agent.ServerStatus;
+                        UpdateStatusLabel();
                         break;
                     case nameof(AgentService.IsThinking):
                         ThinkingLabel.Visibility = _agent.IsThinking ? Visibility.Visible : Visibility.Collapsed;
                         SendBtn.IsEnabled = _agent.IsConnected;
                         InputBox.IsEnabled = _agent.IsConnected;
+                        VoiceBtn.IsEnabled = _agent.IsConnected && !_agent.IsThinking;
                         SendBtn.Content = _agent.IsThinking ? "⏳" : "➤";
                         if (_agent.IsThinking)
                         {
                             _thinkingStartedAt = DateTime.Now;
                             ThinkingLabel.Text = "Thinking… 0s";
-                            StatusLabel.Text = "Agent is thinking…";
+                            UpdateStatusLabel();
                             _thinkingTimer.Start();
                             StartBusyBorderAnimation();
                             ScrollToBottom();
@@ -65,13 +84,23 @@ namespace DevLab.Views
                             _thinkingStartedAt = DateTime.MinValue;
                             ThinkingLabel.Text = "Thinking…";
                             StopBusyBorderAnimation();
+                            UpdateStatusLabel();
                         }
                         break;
                 }
             };
+
+            UpdateVoiceUi();
+            UpdateStatusLabel();
         }
 
         private void OnSend(object sender, RoutedEventArgs e) => Send();
+        private void OnVoiceInput(object sender, RoutedEventArgs e)
+        {
+            if (_voiceInput.IsListening) _voiceInput.Stop();
+            else _voiceInput.Start();
+        }
+
         private void OnInputKeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.Return && (Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control)
@@ -144,6 +173,31 @@ namespace DevLab.Views
             ChatBusyBorder.BeginAnimation(OpacityProperty, null);
             ChatBusyBorder.Opacity = 0;
             ChatBusyBorder.Visibility = Visibility.Collapsed;
+        }
+
+        private void UpdateVoiceUi()
+        {
+            VoiceBtn.Content = _voiceInput.IsListening ? "■" : "🎤";
+            VoiceBtn.ToolTip = _voiceInput.IsListening ? "Stop voice input" : "Start voice input";
+            VoiceBtn.IsEnabled = _agent.IsConnected && !_agent.IsThinking;
+            UpdateStatusLabel();
+        }
+
+        private void UpdateStatusLabel()
+        {
+            if (_voiceInput.IsListening)
+            {
+                StatusLabel.Text = "Listening… speak your prompt";
+                return;
+            }
+
+            if (!string.IsNullOrWhiteSpace(_voiceInput.LastError))
+            {
+                StatusLabel.Text = _voiceInput.LastError;
+                return;
+            }
+
+            StatusLabel.Text = _agent.IsThinking ? "Agent is thinking…" : _agent.ServerStatus;
         }
     }
 }

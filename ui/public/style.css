@@ -352,6 +352,31 @@ html, body {
   cursor: pointer; display: flex; align-items: center; justify-content: center;
   flex-shrink: 0; transition: background .15s, transform .1s;
 }
+#btn-voice {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  color: var(--text);
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background .15s, border-color .15s, color .15s, transform .1s;
+}
+#btn-voice:hover { background: var(--bg-hover); }
+#btn-voice:active { transform: scale(.93); }
+#btn-voice:disabled {
+  opacity: .55;
+  cursor: not-allowed;
+}
+#btn-voice.listening {
+  background: rgba(239, 68, 68, .14);
+  border-color: rgba(239, 68, 68, .55);
+  color: #f87171;
+}
 #btn-send:hover { background: var(--accent-dim); }
 #btn-send:active { transform: scale(.93); }
 #btn-send:disabled { background: var(--bg-hover); color: var(--text-dim); cursor: not-allowed; }
