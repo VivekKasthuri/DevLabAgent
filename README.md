@@ -14,24 +14,24 @@ Powered by DevLab routing and local/self-hosted model backends.
 
 ## What makes it unique
 
-| Feature | Typical agents | Cursor | **DevLab** |
-|---|---|---|---|
-| Persistent memory across sessions | ❌ | ❌ | ✅ SQLite |
-| DevLab model family | ❌ | ❌ | ✅ `devlab-coder` + smart routing |
-| Web search | ❌ | ❌ | ✅ DuckDuckGo |
-| StackOverflow search | ❌ | ❌ | ✅ Built-in |
-| Voice input | ❌ | ❌ | ✅ Built-in speech input |
-| Security scanning | ❌ | ❌ | ✅ OWASP patterns |
-| Performance analysis | ❌ | ❌ | ✅ N+1, O(n²) |
-| Workflow automation | ❌ | ❌ | ✅ YAML workflows |
-| Token/cost tracking | ❌ | ❌ | ✅ Per-session |
-| Multi-repo awareness | ❌ | Partial | ✅ Learn any repo |
-| Autonomous mode | ❌ | ❌ | ✅ No confirmations |
-| Dependency CVE scan | ❌ | ❌ | ✅ npm/pip audit |
-| Jira / Confluence | ❌ | ❌ | ✅ Atlassian API |
-| Web/backend support | ❌ | Partial | ✅ Java, Flask, FastAPI, Go routers, REST, GraphQL |
-| Design handoff | ❌ | Partial | ✅ Figma, Sketch, mobile UI mapping |
-| Automation testing | ❌ | Partial | ✅ Selenium, Appium |
+| Feature | Claude | Cursor | Copilot | **DevLab** |
+|---|---|---|---|---|
+| Persistent memory across sessions | — | — | — | ✅ SQLite |
+| DevLab model family | — | — | — | ✅ `devlab-coder` + smart routing |
+| Web search | — | — | — | ✅ DuckDuckGo |
+| StackOverflow search | — | — | — | ✅ Built-in |
+| Voice input | — | — | — | ✅ Built-in speech input |
+| Security scanning | — | — | — | ✅ OWASP patterns |
+| Performance analysis | — | — | — | ✅ N+1, O(n²) |
+| Workflow automation | — | — | — | ✅ YAML workflows |
+| Token/cost tracking | — | — | — | ✅ Per-session |
+| Multi-repo awareness | — | — | — | ✅ Learn any repo |
+| Autonomous mode | — | — | — | ✅ No confirmations |
+| Dependency CVE scan | — | — | — | ✅ npm/pip audit |
+| Jira / Confluence | — | — | — | ✅ Atlassian API |
+| Web/backend support | — | — | — | ✅ Java, Flask, FastAPI, Go routers, REST, GraphQL |
+| Design handoff | — | — | — | ✅ Figma, Sketch, mobile UI mapping |
+| Automation testing | — | — | — | ✅ Selenium, Appium |
 
 ## Quick Start
 
