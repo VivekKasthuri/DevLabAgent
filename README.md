@@ -2,16 +2,22 @@
 
 **The autonomous AI coding agent that fills every gap Claude, Copilot, & Cursor miss.**
 
-Powered by Groq, Claude, and local free-model backends.
+Powered by Groq, Claude, and local DevLab model backends.
 
-[![PR CI](https://img.shields.io/badge/PR%20CI-enabled-blue)](./.github/workflows/ci.yml)
+## Current agent setup
+
+- Runtime: **Node.js 22.5+** (`node:sqlite` is required)
+- Package manager: **npm**
+- Default memory DB: `~/.devlab/memory.db`
+- Default MCP config: `~/.devlab/mcp-servers.json`
+- Default safety mode: `SAFETY_MODE=normal`
 
 ## What makes it unique
 
 | Feature | Claude | Cursor | **DevLab** |
 |---|---|---|---|
 | Persistent memory across sessions | ❌ | ❌ | ✅ SQLite |
-| Free to use | ❌ | ❌ | ✅ Groq free tier / local models |
+| DevLab model family | ❌ | ❌ | ✅ `devlab-coder` + smart routing |
 | Web search | ❌ | ❌ | ✅ DuckDuckGo |
 | StackOverflow search | ❌ | ❌ | ✅ Built-in |
 | Voice input | ❌ | ❌ | ✅ Groq Whisper |
@@ -33,7 +39,7 @@ Powered by Groq, Claude, and local free-model backends.
 
 - Groq: free tier at [console.groq.com](https://console.groq.com)
 - Claude: add your Anthropic API key
-- Ollama/free models: run a local model server
+- Ollama/DevLab models: run a local model server
 
 ### 2. Install
 
@@ -41,7 +47,9 @@ Powered by Groq, Claude, and local free-model backends.
 cd Agent
 npm install
 cp .env.example .env
-# Edit .env with the provider keys you want to use
+# Recommended: run guided setup (writes .env for you)
+devlab setup
+# Or edit .env manually with the provider keys you want to use
 ```
 
 ### 3. Run
@@ -87,10 +95,9 @@ When you run `devlab chat` without provider flags, it opens a dropdown to pick t
 
 ### PR checks
 
-- GitHub Actions: `.github/workflows/ci.yml`
-- Jenkins: `Jenkinsfile`
-- Local: `npm run ci`
-- Protect `main`/`master` and require the GitHub check `PR CI / ci`
+- Local CI gate: `devlab ci .` or `npm run ci`
+- Jenkins pipeline: `Jenkinsfile`
+- GitHub Actions can be added/enabled if your repo uses workflow checks
 
 ### Web/backend support
 
@@ -117,13 +124,32 @@ When you run `devlab chat` without provider flags, it opens a dropdown to pick t
 
 ### Model configuration
 
-- `MODEL_PROVIDER=groq|claude|ollama|free|copilot`
+- `MODEL_PROVIDER=groq|claude|ollama|copilot`
 - `MODEL_NAME=...`
 - `CLAUDE_API_KEY=...`
 - `CLAUDE_MODEL=...`
 - `OPENAI_COMPAT_BASE_URL=http://localhost:11434`
 - `OPENAI_COMPAT_MODEL=...`
 - `COPILOT_FALLBACK_PROVIDER=groq|claude|ollama` (Copilot mode routes through this provider)
+- `DEVLAB_CODE_MODEL=...` (code-generation model for DevLab smart routing)
+- `DEVLAB_REVIEW_MODEL=...` (code-review quality model for DevLab smart routing)
+- `DEVLAB_FAST_MODEL=...` (low-latency model for quick tasks)
+
+### DevLab models
+
+- `devlab-coder` is the primary DevLab model identity used by smart routing.
+- Build/refresh it locally:
+
+```bash
+./scripts/create-devlab-model.sh
+```
+
+- Point DevLab to the model:
+
+```bash
+MODEL_PROVIDER=ollama
+OPENAI_COMPAT_MODEL=devlab-coder
+```
 
 ### Team LLM server (shared GPU box)
 
@@ -395,7 +421,7 @@ DEVLAB_API_KEY=your-secret WORKSPACE=/path/to/repos docker compose up -d
   HMAC-signed session cookies, 8h TTL, `/auth/me`, `/auth/logout`). Zero extra
   components, works air-gapped — the only network calls are to *your* IdP.
   API keys keep working alongside SSO for CI and the IDE extension.
-- **Audit**: every tool execution is recorded to `~/.codeagent/audit.log` (JSONL).
+- **Audit**: every tool execution is recorded to `~/.devlab/audit.log` (JSONL).
 - **GPU**: uncomment the NVIDIA block in `docker-compose.yml` for GPU inference.
 - **Full deployment guide**: [`deploy/README.md`](deploy/README.md) covers all four
   models — local air-gapped, on-prem team server (Compose), private cloud VPC
@@ -413,7 +439,7 @@ DEVLAB_API_KEY=your-secret WORKSPACE=/path/to/repos docker compose up -d
 Complex-tier answers produced by a **local** model are automatically verified
 by the strongest cloud rung available (gpt-oss-120b / Claude). If the verifier
 finds critical defects, the task is re-run on the stronger model — frontier-
-checked answers with ~90% of inference still free/local. Disabled automatically
+checked answers with ~90% of inference still local/self-hosted. Disabled automatically
 in local-only privacy mode; opt out with `DEVLAB_CROSS_VERIFY=off`.
 
 ## Claude-free frontier ceiling
@@ -458,7 +484,7 @@ workflows/
 ## Configuration
 
 ```env
-MODEL_PROVIDER=groq                 # groq | claude | ollama | free | copilot
+MODEL_PROVIDER=groq                 # groq | claude | ollama | copilot
 GROQ_API_KEY=gsk_...                # Required for Groq
 GROQ_MODEL=llama-3.3-70b-versatile   # Optional — Groq default model
 CLAUDE_API_KEY=sk-ant-...            # Optional — Anthropic/Claude
