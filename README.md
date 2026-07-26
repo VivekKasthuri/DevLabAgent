@@ -341,8 +341,6 @@ DevLab ships as native desktop applications alongside the CLI and web UI:
 
 | Platform | Tech | Build command | Output |
 |---|---|---|---|
-| macOS | Electron | `npm run build:mac` | `dist/DevLab-*.dmg` / `.zip` |
-| **Windows** | Electron | `npm run build:win` | `dist/DevLab *.exe` (NSIS installer + portable) |
 | Linux | Electron | `npm run build:linux` | AppImage / deb / rpm |
 | Windows (native) | WPF (.NET) | `dotnet build apps/windows/DevLab` | Native WPF app |
 | macOS (native) | SwiftUI | Xcode: `apps/macos` | Native Mac app |
